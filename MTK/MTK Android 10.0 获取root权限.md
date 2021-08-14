@@ -1,4 +1,4 @@
-### MTK 10.0获取 Root 权限
+### MTK  Android  10.0获取 Root 权限
 
 一. 先将seLinux关闭
 
