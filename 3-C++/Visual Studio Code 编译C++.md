@@ -77,7 +77,7 @@
                "args": [
                    "-g",
                    "-std=c++11",
-                   "${file}",
+                   "${fileDirname}\\*.cpp",
                    "-o",
                    "${workspaceRoot}\\${fileBasenameNoExtension}.exe"
                ],
@@ -97,8 +97,8 @@
                    }
                },
                "group": {
-                   "_id": "build",
-                   "isDefault": false
+                   "kind": "build",
+                   "isDefault": true
                }
            }
        ]
@@ -150,7 +150,7 @@
                "command": "gcc",　　//c文件就用gcc，cpp文件就用g++
                "args": [
                    "-g",
-                   "${file}",
+                   "${fileDirname}\\*.c",
                    "-o",
                    "${fileDirname}\\${fileBasenameNoExtension}.exe"
                ],
