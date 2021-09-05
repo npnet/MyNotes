@@ -41,7 +41,7 @@
 
 
 
-三.修改属性o.adb.secure 和 ro.debuggable
+三.修改属性ro.adb.secure 和 ro.debuggable
 ```makefile
 --- a/build/make/core/main.mk
 +++ b/build/make/core/main.mk
@@ -200,7 +200,7 @@
      { 00755, AID_ROOT,      AID_SHELL,     0, "system/apex/*/bin/*" },
 ```
 
-```
+```shell
 --- a/system/core/rootdir/init.rc
 +++ b/system/core/rootdir/init.rc
 @@ -12,6 +12,10 @@ import /init.usb.configfs.rc
@@ -219,9 +219,9 @@
  on property:sys.boot_completed=1
      bootchart stop
 +    
-+#add by for root
-+start remount
-+#end
++	#add by for root
++	start remount
++	#end
 +    
      # Setup per_boot directory so other .rc could start to use it on boot_completed
      exec - system system -- /bin/rm -rf /data/per_boot
@@ -235,8 +235,8 @@
 +
 +
 +service remount /system/bin/remount
-+       class core
-+       oneshot
++    class core
++    oneshot
 +    disabled
 +    user root
 +    group root
