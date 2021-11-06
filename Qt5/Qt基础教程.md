@@ -625,3 +625,293 @@ qDebug() << "字体：" << font.family().toUtf8().data() <<" 字号：" << font.
     << font.bold() << " 是否倾斜：" << font.italic();
 ```
 
+
+
+### 5.界面布局
+
+实现登陆窗口
+
+* 利用布局方式 给窗口进行美化
+* 选取 `widget` 进行布局 ，水平布局、垂直布局、栅格布局
+* 给用户名、密码、登陆、退出按钮进行布局
+* 默认窗口和控件之间 有9间隙，可以调整 `layoutLeftMargin`
+* 利用弹簧进行布局
+
+
+
+### 6.控件
+
+#### 6.1 按钮组
+
+##### 6.1.1 QPushButton 常用按钮
+
+##### 6.1.2 QToolButton 工具按钮
+
+用于显示图片和文字，`toolButtonStyle`修改显示样式 ，`autoRaise`凸起风格，`icon`加载图标文件
+
+##### 6.1.3 radioButton 单选按钮
+
+单选按钮设置默认
+
+```c++
+ui->rBnMan->setChecked(true);
+```
+
+```c++
+//选中后打印信息
+connect(ui->rBtnWoman, &QRadioButton::clicked,[=]{
+    qDebug() << "选中女单选项按钮";
+});
+```
+
+
+
+##### 6.1.4 checkBox 多选按钮，监听状态
+
+2选中，1半选，0未选 ，通过 `tristate`打开三态
+
+```c++
+connect(ui->cBox4,&QCheckBox::stateChanged,[=](int state){
+    qDebug() << state;
+});
+```
+
+
+
+#### 6.2 QListWidget列表容器
+
+利用QListWidget写一句文本
+
+```c++
+QListWidgetItem* item = new QListWidgetItem("锄禾日当午");
+//将一行诗放入ListWidget控件当中
+ui->listWidget->addItem(item);
+item->setTextAlignment(Qt::AlignHCenter); //水平居中
+```
+
+
+
+利用QListWidget写一首诗
+
+```c++
+//QStringList <==> QList<QString>
+QStringList list;
+list << "锄禾日当午" << "汗滴禾下土" << "谁知盘中餐" << "粒粒皆辛苦";
+ui->listWidget->addItems(list);
+```
+
+
+
+#### 6.3 QTreeWidget 树控件
+
+* 设置头
+
+  ```c++
+  ui->treeWidget->setHeaderLabels(QStringList() << "英雄" << "英雄介绍");
+  ```
+
+* 创建根节点
+
+  ```c++
+  QTreeWidgetItem * liItem = new QTreeWidgetItem(QStringList()<< "力量");
+  ```
+
+* 添加根节点到树控件上
+
+  ```c++
+  ui->treeWidget->addTopLevelItem(liItem);
+  ```
+
+* 添加子节点
+
+  ```c++
+  QStringList heroL1;
+  heroL1 << "刚被猪" << "前排坦克，能在吸收伤害的同时造成可观的范围输出";
+  QTreeWidgetItem* l1 = new QTreeWidgetItem(heroL1);
+  liItem->addChild(l1);
+  ```
+
+  
+
+#### 6.4 QTableWidget 表格控件
+
+* 设置列数
+
+  ```c++
+  ui->tableWidget->setColumnCount(3);
+  ```
+
+* 设置水平表头
+
+  ```c++
+  ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "姓名" << "性别" << "年龄");
+  ```
+
+* 设置行数
+
+  ```c++
+  ui->tableWidget->setRowCount(5);
+  ```
+
+* 设置正文
+
+  ```c++
+  QStringList nameList;
+  nameList << "亚瑟" << "赵云" << "张飞" << "关羽" << "花木兰";
+  
+  QList<QString> sexList;
+  sexList << "男" << "男" << "男" << "男" << "女";
+  
+  for(int i=0; i<5; i++)
+  {
+      int col = 0;
+      ui->tableWidget->setItem(i,col++,new QTableWidgetItem(nameList[i]));
+      ui->tableWidget->setItem(i,col++,new QTableWidgetItem(sexList[i]));
+      //int转QString
+      ui->tableWiidget->setItem(i,col++,new QTableWidgetItem(QString::number(18+i)));
+  }
+  ```
+
+  
+
+#### 6.5 其他控件介绍
+
+##### 6.5.1 stackWidget 栈控件
+
+```c++
+//栈控件使用
+//设置默认定位
+ui->stackWidget->setCurrentIndex(0);
+```
+
+
+
+##### 6.5.2 下拉框
+
+```c++
+ui->comboBox->addItem("奔驰");
+
+//设置默认定位
+ui->comboBox->setCurrentIndex("宝马");
+```
+
+
+
+##### 6.5.3 QLabel
+
+* 显示图片
+
+  ```c++
+  ui->lbl_image->setPixmap(QPixmap(":/Image/butterfly.png"));
+  ```
+
+* 显示动图
+
+  **头文件 #include\<QMovie\>**
+
+  ```c++
+  QMovie* movie = new QMovie(":/Image/mario.gif");
+  ui->lbl_movie->setMovie(movie);
+  
+  //播放动图
+  movie->start();
+  
+  //停止播放
+  movie->stop();
+  ```
+
+  
+
+##### 6.5.4 自定义控件封装
+
+**示例**：设计QSoinBox和QSlider组合控件
+
+* 添加新文件
+
+  Qt -- 设计师界面类 （.cpp  .h  .ui）
+
+* .ui文件中设计 QSpinBox 和 QSlider 两个控件
+
+* Widget中使用自定义控件，拖拽一个Widget，点击提升为，点击添加，点击提升（注意类名需保持一致）
+
+* 现功能，改变数字，滑动条跟着移动 ，信号槽监听
+
+  ```c++
+  //QSpinBox移动，QSlider跟着移动
+  void(QSpinBox::* spSignal)(int) = &QSpinBox::valueChanged;  //重载
+  connect(ui->spinBox,spSignal,ui->horizontalSlider,&QSlider::setValue);
+  
+  //QSlider滑动，QSpinBox数字跟着改变
+  connect(ui->horizontalSlider,&QSlider::valueChanged,ui->spinBox, &QSpinBox::setValue);
+  ```
+
+* 提供 getNum 和 setNum 接口
+
+  ```c++
+  //设置数字
+  void SmallWidget::setNum(int num){
+      ui->spinBox->setValue(num);
+  }
+  
+  //获取数字
+  int SmallWidget::getNum(){
+      return ui->spinBox->value();
+  }
+  ```
+
+* Widget 调用 getNum 和 setNum 接口
+
+  ```c++
+  //点击获取控件当前的值
+  connect(ui->btn_get, &QPushButton::clicked,[=](){
+      qDebug() << ui->widget->getNum();
+  });
+  
+  //设置控件值
+  connect(ui->btn_set, &QPushButton,[=](){
+      ui->widget->setNum(33);
+  });
+  ```
+
+  
+
+### 7.Qt中的事件
+
+#### 7.1  鼠标事件
+
+* 鼠标进入事件
+
+  ```c++
+  void myLabel::enterEvent(QEvent* event)
+  {
+      qDebug << "鼠标进入了";
+  }
+  ```
+
+* 鼠标离开事件
+
+  ```c++
+  void myLabel::leaveEvent(QEvent* event)
+  {
+      qDebug() << "鼠标离开了";
+  }
+  ```
+
+* 鼠标按下事件
+
+  ```c++
+  void myLabel::mousePressEvent(QMouseEvent* ev)
+  {
+      if(ev->button() == Qt::LeftButton)
+      {
+          
+      }
+  }
+  ```
+
+  
+
+
+
+
+
