@@ -384,7 +384,7 @@ qDebug() << m;
   toolbar->addSeparator();
   ```
 
-* 工具栏中添加控件
+  * 工具栏中添加控件
 
   ```c++
   QPushButton* btn = new QPushButton("Button",this);
