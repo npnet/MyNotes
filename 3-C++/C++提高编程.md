@@ -85,11 +85,9 @@ void test01()
 }
 
 int main() {
-
 	test01();
-
+    
 	system("pause");
-
 	return 0;
 }
 ```
@@ -177,7 +175,7 @@ int main() {
 ```c++
 //交换的函数模板
 template<typename T>
-void mySwap(T &a, T&b)
+void mySwap(T &a, T &b)
 {
 	T temp = a;
 	a = b;
@@ -205,6 +203,7 @@ void mySort(T arr[], int len)
 		}
 	}
 }
+
 template<typename T>
 void printArray(T arr[], int len) {
 
