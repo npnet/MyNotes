@@ -62,7 +62,7 @@ sudo vi /etc/mysql/my.cnf
 
 ### 二、Window mysql-8.0 初始密码修改
 
-#### 1. 以管理员身份运行cmd，关闭mysql服务
+#### 1. 以**管理员身份**运行cmd，关闭mysql服务
 
 ```shell
 net stop mysql
@@ -84,7 +84,9 @@ mysqld --console --skip-grant-tables --shared-memory
 mysql #直接进入不用输入密码
 use mysql; #进入mysql数据库
 select use,authentication_string from user; #查看数据
-update user set authentication='' where user='root'; #设置无密码
+update user set authentication_string='' where user='root'; #设置无密码
+flush privileges; #保存更新
+
 alter user 'root'@'localhost' identified with mysql_native_password by "123456"
 flush privileges; #保存更新
 ```

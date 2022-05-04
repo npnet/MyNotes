@@ -236,6 +236,12 @@ SELECT column_name,column_name FROM table_name [WHERE Clause] [LIMIT N][ OFFSET 
 - 你可以使用 LIMIT 属性来设定返回的记录数。
 - 你可以通过OFFSET指定SELECT语句开始查询的数据偏移量。默认情况下偏移量为0。
 
+**统计数量**
+
+```mysql
+SELECT count(1) FROM table_name
+```
+
 
 
 #### 4.6 WHERE子句
