@@ -84,4 +84,4 @@ wireshark ~/usb.pcap
 usb.device_address == 设备号
 ```
 
-![wireshark usbmon log.jpg](https://i.loli.net/2021/07/26/t8lcXLfQKdBhWNy.jpg)
+![image-20220801004252359](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220801004252359.png)
