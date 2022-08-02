@@ -58,7 +58,10 @@
 ```shell
 # Github Start 
 140.82.113.3      github.com
+140.82.114.4	  github.com
 140.82.114.20     gist.github.com
+185.199.109.153   assets-cdn.github.com
+199.232.69.194    github.global.ssl.fastly.net
 
 151.101.184.133    assets-cdn.github.com
 151.101.184.133    raw.githubusercontent.com
@@ -91,4 +94,6 @@
 
 # GitHub End
 ```
+
+更新完host文件后，运行控制台命令，输入指令 `ipconfig /flushdns` 刷新dns解析
 
