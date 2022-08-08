@@ -123,7 +123,7 @@ func main() {
 
   1. init函数
 
-     ![image-20220615151751390](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220615151751390.png)
+     ![image-20220615151751390](images/image-20220615151751390.png)
 
      制作包的时候，项目路径如下：
 
@@ -215,7 +215,7 @@ func main(){
 }
 ```
 
-![image-20220615163841637](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220615163841637.png)
+![image-20220615163841637](images/image-20220615163841637.png)
 
 
 
@@ -234,7 +234,7 @@ func main(){
 }
 ```
 
-![image-20220615164040419](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220615164040419.png)
+![image-20220615164040419](images/image-20220615164040419.png)
 
 
 
@@ -242,7 +242,7 @@ func main(){
 
 * defer的执行顺序
 
-  ![image-20220615164436189](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220615164436189.png)
+  ![image-20220615164436189](images/image-20220615164436189.png)
 
   执行顺序：**fun3() --> fun2() --> fun1()**
 
@@ -352,7 +352,7 @@ func main(){
 
      切片的长度和容量不同，长度表示左指针到右指针之间的距离，容量表示左指针至底层数组末尾的距离
 
-     ![image-20220616102816272](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220616102816272.png)
+     ![image-20220616102816272](images/image-20220616102816272.png)
 
      
 
@@ -624,7 +624,7 @@ myMap3 := map[string]string{
 
 * 变量的结构
 
-  ![image-20220617095017684](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220617095017684.png)
+  ![image-20220617095017684](images/image-20220617095017684.png)
 
 * reflect包
 
@@ -700,7 +700,7 @@ runtime.Goexit() 退出当前的goroutine
 
 * channel的定义
 
-  ![image-20220617110710427](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220617110710427.png)
+  ![image-20220617110710427](images/image-20220617110710427.png)
 
   ```go
   make(chan Type) //等价于make(chan Type, 0)
@@ -733,7 +733,7 @@ runtime.Goexit() 退出当前的goroutine
 
 #### 2.3 无缓冲的channel
 
-<img src="https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220617111859493.png" alt="image-20220617111859493" style="zoom:67%;" />
+<img src="images/image-20220617111859493.png" alt="image-20220617111859493" style="zoom:67%;" />
 
 1. 第一步，两个goroutine都到达通道，但哪个都没有开始执行发送或者接收
 2. 第二步，左侧goroutine将手伸进通道，模拟了向通道发送数据的行为。这时这个goroutine会在通道中被锁住，直到交换完成
@@ -744,7 +744,7 @@ runtime.Goexit() 退出当前的goroutine
 
 #### 2.4 有缓冲的channel
 
-<img src="https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220617112847939.png" alt="image-20220617112847939" style="zoom:67%;" />
+<img src="images/image-20220617112847939.png" alt="image-20220617112847939" style="zoom:67%;" />
 
 1. 第一步，右侧的goroutine正在从通道接收一个值
 2. 第二步，右侧的goroutine独立完成了接收值的动作，而左侧的goroutine正在发送一个新值到通道里

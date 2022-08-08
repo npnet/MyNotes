@@ -761,7 +761,7 @@ v2 := router.Group("/v2")
 
 3. ctx.Abort()终止调用该请求的剩余处理程序
 
-   ![image-20220624103639159](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220624103639159.png)
+   ![image-20220624103639159](images/image-20220624103639159.png)
 
    ![image-20220624103842998](https://raw.githubusercontent.com/Kownzird/Notes-Img/master/img/image-20220624103842998.png)
 
