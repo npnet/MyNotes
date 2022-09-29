@@ -183,7 +183,7 @@ mysql> desc test_int3;
 - REAL默认就是 DOUBLE。如果你把 SQL 模式设定为启用“`REAL_AS_FLOAT`”，那 么，MySQL 就认为 REAL 是 FLOAT。如果要启用“REAL_AS_FLOAT”，可以通过以下 SQL 语句实现：
 
   ```mysql
-  SET sql_mode = “REAL_AS_FLOAT”;
+  SET sql_mode = "REAL_AS_FLOAT";
   ```
 
 **问题1：**FLOAT 和 DOUBLE 这两种数据类型的区别是啥呢？
