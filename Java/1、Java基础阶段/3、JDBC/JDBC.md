@@ -1217,7 +1217,6 @@ public void update(Connection conn ,String sql, Object... args) {
    		} finally {
    			// 4.资源的关闭
    			JDBCUtils.closeResource(null, ps);
-    
    		}
    		return 0;
     
@@ -1345,9 +1344,9 @@ public void update(Connection conn ,String sql, Object... args) {
    	public abstract void update(Connection conn, Customer cust);
    }
    ```
-
    
 
+   
 2. **创建接口规范功能**
 
    对于每一张不同的表，我们需要创建一定的接口去规范我们的查询操作
