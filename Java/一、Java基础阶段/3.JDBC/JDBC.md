@@ -98,7 +98,7 @@
 
 - 加载驱动：加载 JDBC 驱动需调用 Class 类的静态方法 forName()，向其传递要加载的 JDBC 驱动的类名
 
-  - **Class.forName(“com.mysql.jdbc.Driver”);**
+  - **Class.forName("com.mysql.jdbc.Driver");**
 
 - 注册驱动：DriverManager 类是驱动程序管理器类，负责管理驱动程序
   - **使用DriverManager.registerDriver(com.mysql.jdbc.Driver)来注册驱动**
@@ -162,6 +162,9 @@
 
             //2.提供url，指明具体操作的数据
             String url = "jdbc:mysql://localhost:3306/test";
+            //若使用mysql8.0报错Initial client character set can be forced via the 'characterEncoding' property.
+            //是因为字符集和驱动不匹配，需要更改url如下
+            //String url = "jdbc:mysql://localhost:3306/test?characterEncoding=utf8";
 
             //3.提供Properties的对象，指明用户名和密码
             Properties info = new Properties();
@@ -333,7 +336,7 @@ driverClass=com.mysql.jdbc.Driver
 
 - 在 java.sql 包中有 3 个接口分别定义了对数据库的调用的不同方式：
   - Statement：用于执行静态 SQL 语句并返回它所生成结果的对象。 
-  - PrepatedStatement：SQL 语句被预编译并存储在此对象中，可以使用此对象多次高效地执行该语句。
+  - PreparedStatement：SQL 语句被预编译并存储在此对象中，可以使用此对象多次高效地执行该语句。
   - CallableStatement：用于执行 SQL 存储过程
 
   ![1566573842140](images/1566573842140.png)
@@ -907,6 +910,7 @@ JDBCUtils.closeResource(conn, ps);
  * 修改1： 使用 addBatch() / executeBatch() / clearBatch()
  * 修改2：mysql服务器默认是关闭批处理的，我们需要通过一个参数，让mysql开启批处理的支持。
  * 		 ?rewriteBatchedStatements=true 写在配置文件的url后面
+ * mysql8.0 需要在url后面补充：?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true
  * 修改3：使用更新的mysql 驱动：mysql-connector-java-5.1.37-bin.jar
  * 
  */

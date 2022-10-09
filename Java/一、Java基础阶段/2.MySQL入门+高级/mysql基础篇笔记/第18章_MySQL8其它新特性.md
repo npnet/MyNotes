@@ -8,7 +8,7 @@
 
 ## 1. MySQL8新特性概述
 
-`MySQL从5.7版本直接跳跃发布了8.0版本`，可见这是一个令人兴奋的里程碑版本。MySQL 8版本在功能上做了显著的改进与增强，开发者对MySQL的源代码进行了重构，最突出的一点是多MySQL Optimizer优化器进行了改进。不仅在速度上得到了改善，还为用户带来了更好的性能和更棒的体验。
+`MySQL从5.7版本直接跳跃发布了8.0版本`，可见这是一个令人兴奋的里程碑版本。MySQL 8版本在功能上做了显著的改进与增强，开发者对MySQL的源代码进行了重构，最突出的一点是对MySQL Optimizer优化器进行了改进。不仅在速度上得到了改善，还为用户带来了更好的性能和更棒的体验。
 
 ### 1.1 MySQL8.0 新增特性
 
@@ -52,7 +52,7 @@ MySQL优化器开始支持隐藏索引和降序索引。隐藏索引不会被优
 
 基础语法如下：
 
-```
+```mysql
 WITH cte_name (col_name1,col_name2 ...) AS (Subquery)
 SELECT * FROM cte_name;
 ```
@@ -127,7 +127,6 @@ id INT PRIMARY KEY AUTO_INCREMENT,
 city VARCHAR(15),
 county VARCHAR(15),
 sales_value DECIMAL
-
 );
 
 INSERT INTO sales(city,county,sales_value)
@@ -383,7 +382,7 @@ mysql> SELECT *
 
 举例：使用RANK()函数获取 goods 数据表中各类别的价格从高到低排序的各商品信息。
 
-```
+```mysql
 mysql> SELECT RANK() OVER(PARTITION BY category_id ORDER BY price DESC) AS row_num,
     -> id, category_id, category, NAME, price, stock
     -> FROM goods;
@@ -434,7 +433,7 @@ DENSE_RANK()函数对序号进行并列排序，并且不会跳过重复的序�
 
 举例：使用DENSE_RANK()函数获取 goods 数据表中各类别的价格从高到低排序的各商品信息。
 
-```
+```mysql
 mysql> SELECT DENSE_RANK() OVER(PARTITION BY category_id ORDER BY price DESC) AS row_num,
     -> id, category_id, category, NAME, price, stock
     -> FROM goods;
@@ -862,5 +861,4 @@ SELECT employee_id,last_name FROM cte WHERE n >= 3;
 ### 3.3 小 结
 
 公用表表达式的作用是可以替代子查询，而且可以被多次引用。递归公用表表达式对查询有一个共同根节点的树形结构数据非常高效，可以轻松搞定其他查询方式难以处理的查询。
-
 
