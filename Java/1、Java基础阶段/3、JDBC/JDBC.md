@@ -1316,7 +1316,7 @@ public void update(Connection conn ,String sql, Object... args) {
    		}
     
    		return null;
-   	}
+           }
    	//用于查询特殊值的通用的方法
    	//比方说select count(*)_ from user_table就是返回一共有几行数据
    	public <E> E getValue(Connection conn,String sql,Object...args){
@@ -1359,58 +1359,26 @@ public void update(Connection conn ,String sql, Object... args) {
    import com.atguigu2.bean.Customer;
    //指明操作的是Customer类，因为我们重写所实现的方法均是针对于Customer接口的
    //然后再BaseDAO中获取这个当前类的父类的泛型，也就是Customer
-   public class CustomerDAOImpl extends BaseDAO<Customer> implements CustomerDAO{
+   public interface CustomerDAO{
     
+   	public void insert(Connection conn, Customer cust);
     
-   	
-   	@Override
-   	public void insert(Connection conn, Customer cust) {
-   		String sql = "insert into customers(name,email,birth)values(?,?,?)";
-   		update(conn, sql,cust.getName(),cust.getEmail(),cust.getBirth());
-   	}
+   	public void deleteById(Connection conn, int id);
     
-   	@Override
-   	public void deleteById(Connection conn, int id) {
-   		String sql = "delete from customers where id = ?";
-   		update(conn, sql, id);
-   	}
+   	public void update(Connection conn, Customer cust);
     
-   	@Override
-   	public void update(Connection conn, Customer cust) {
-   		String sql = "update customers set name = ?,email = ?,birth = ? where id = ?";
-   		update(conn, sql,cust.getName(),cust.getEmail(),cust.getBirth(),cust.getId());
-   	}
+   	public Customer getCustomerById(Connection conn, int id);
     
-   	@Override
-   	public Customer getCustomerById(Connection conn, int id) {
-   		String sql = "select id,name,email,birth from customers where id = ?";
-   		Customer customer = getInstance(conn, sql,id);
-   		return customer;
-   	}
+   	public List<Customer> getAll(Connection conn);
     
-   	@Override
-   	public List<Customer> getAll(Connection conn) {
-   		String sql = "select id,name,email,birth from customers";
-   		List<Customer> list = getForList(conn, sql);
-   		return list;
-   	}
+   	public Long getCount(Connection conn);
     
-   	@Override
-   	public Long getCount(Connection conn) {
-   		String sql = "select count(*) from customers";
-   		return getValue(conn, sql);
-   	}
-    
-   	@Override
-   	public Date getMaxBirth(Connection conn) {
-   		String sql = "select max(birth) from customers";
-   		return getValue(conn, sql);
-   	}
+   	public Date getMaxBirth(Connection conn);
    }
    ```
-
    
-
+   
+   
 3. **调用BaseDAO实现针对于某一张表具体的查询操作**
 
    重写接口所对应的方法，来实现具体的功能
