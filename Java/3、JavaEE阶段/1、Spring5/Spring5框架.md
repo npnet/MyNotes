@@ -575,6 +575,352 @@ public class Emp {
 
       
 
+### 7、IOC操作Bean管理（FactoryBean）
+
+Spring有两种类型bean，一种普通bean，另一种工厂bean(FactoryBean)
+
+1. 普通bean在配置文件中，定义bean类型就是返回类型
+2. 工厂bean在配置文件中定义bean类型可以和返回类型不一样
+
+* 第一步创建类，让这个类作为工厂Bean，实现接口FactoryBean
+
+* 第二步实现接口里的方法，在实现方法中定义返回的bean类型
+
+  ```java
+  //实现接口类
+  public class MyBean implements FactoryBean<Course>{
+      @override
+      public Course getObject() throws Exceptions{
+              Course  course = new Course();
+              course.setCourse("java");
+              return course;
+      }
+      @override
+      public Class<?> getObjectType(){
+              return NULL;
+      }
+      @override
+      public Boolean isSingleton(){
+              return false;
+      }
+  }
+  //配置类
+  <bean id = "mybean" class="com.zhh.entity.MyBean"></bean>
+  //测试类
+  @test
+  public void test2(){
+      ApplicationContext application  = new 	classPathXpthXmlApplicationContext("bean4.xml");
+  	Course course =  context.getBean("MyBean",Course.class);
+  }
+  ```
+
+
+
+### 8、IOC操作Bean管理（bean作用域）
+
+1. 在Spring里，设置创建Bean实例是单实例还是多实例
+2. 在Spring里，默认设置创建Bean实例是单实例
+3. 如何设置单实例还是多实例
+
+Spring配置文件bean标签里scope属性用于设置单实例还是多实例
+
+scope属性值：
+
+* 默认值：singleton，表示单实例对象
+* prototype，表示多实例对象
+
+```xml
+//配置
+<bean id="book" class="com.zhh.entity.Book" scope="prototype">
+    <property name="list" ref = "booklist"></property>
+</bean>
+```
+
+4. singleton与prototype区别
+
+   1. singleton表示单实例，prototype表示多实例
+
+   2. 设置scope是singleton时，加载Spring配置文件时会创建单实例对象
+
+      设置scope是prototype时，不是加载Spring配置文件时就创建对象，而是在调用getBean方法时创建多实例对象
+
+
+
+### 9、IOC操作Bean管理（生命周期）
+
+#### 9.1 生命周期
+
+从对象创建到对象销毁的过程
+
+#### 9.2 bean生命周期
+
+1. 通过构造器创建bean实例（无参数构造）
+2. 为bean的属性设置值和对其他bean引用（调用set方法）
+3. 调用bean的初始化方法（需要进行配置）
+4. bean可以使用了（对象获取到了）
+5. 当容器关闭时，调用bean的销毁方法（需要进行配置销毁方法）
+
+```java
+public class Orders {
+    private String oname;
+
+    public Orders() {
+        System.out.println("第一步 执行无参构造创建bean实例");
+    }
+
+    public void setOname(String oname) {
+        this.oname = oname;
+        System.out.println("第二步 调用set方法设置属性");
+    }
+
+    public void initMethod(){
+        System.out.println("第三步 执行初始化的方法");
+    }
+
+    public void destroyMethod(){
+        System.out.println("第五步 执行销毁的方法");
+    }
+
+    @Override
+    public String toString() {
+        return "Orders{" +
+                "oname='" + oname + '\'' +
+                '}';
+    }
+}
+```
+
+```xml
+<bean id="orders" class="com.spring5.bean.Orders" init-method="initMethod" destroy-method="destroyMethod">
+    <property name="oname" value="手机"></property>
+</bean>
+```
+
+```java
+@Test
+public void test1(){
+    //1.加载Spring配置文件
+    ApplicationContext context = new ClassPathXmlApplicationContext("bean7.xml");
+
+    //2.获取配置创建的对象
+    Orders orders = context.getBean("orders", Orders.class);
+
+    System.out.println(orders.toString());
+
+    //手动销毁bean实例
+    ((ClassPathXmlApplicationContext) context).close();
+}
+```
+
+#### 9.3 bean的后置处理器，bean生命周期有七步
+
+1. 通过构造器创建Bean实例（无参数构造）
+2. 为bean的属性设置值和对其他bean引用（调用set方法）
+3. 把bean实例传递bean后置处理器的方法postProcessBeforeInitialization
+4. 调用bean的初始化的方法（需要进行配置）
+5. 把bean实例传递bean后置处理器的方法postProcessAfterInitialization
+6. bean可以使用了（对象获取到了）
+7. 当容器关闭时，调用bean的销毁方法（需要进行配置销毁的方法）
+
+```java
+//MyBean.java
+public class MyBeanPost implements BeanPostProcessor {
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("在初始化之前执行的方法");
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("在初始化之后执行的方法");
+        return bean;
+    }
+}
+```
+
+```xml
+<!-- 配置后置处理器-->
+<!--在该配置文件下的bean都会引用该后置处理器-->
+<bean id="myBean" class="com.java.spring5.period.MyBeanPost"></bean>
+```
+
+
+
+### 10、IOC操作Bean管理（xml自动装配）
+
+* 什么是自动装配
+
+  根据指定装配规则（属性名称或者属性类型），Spring自动将匹配的属性值进行注入
+
+* 演示自动装配过程
+
+  ```xml
+  <!--实现自动装配
+      bean标签属性autowire，配置自动装配
+      autowire属性常用两个值：
+          byName根据属性名称注入，注入值bean的id值和类属性名称一样
+          byType根据属性类型注入
+  -->
+  <bean id="emp" class="com.spring5.autowire.Emp" autowire="byName"></bean>
+  <bean id="dept" class="com.spring5.autowire.Dept"></bean>
+  ```
+
+
+
+
+### 11、IOC操作Bean管理（外部属性文件）
+
+#### 11.1 直接配置数据库信息
+
+1. 配置德鲁伊连接池
+2. 引入德鲁伊连接池依赖jar包
+
+```xml
+<!--直接配置连接池-->
+<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+    <property name="url" value="jdbc:mysql://localhost:3306/test"></property>
+    <property name="username" value="root"></property>
+    <property name="password" value="123456"></property>
+</bean>
+```
+
+#### 11.2 引入外部属性文件配置数据库连接池
+
+1. 创建外部属性文件,properties格式文件，写数据库信息
+
+   ```properties
+   prop.driverClass=com.mysql.jdbc.Driver
+   prop.url=jdbc:mysql://localhost:3306/test
+   prop.userName=root
+   prop.password=123456
+   ```
+
+2. 把外部properties属性文件引入到Spring配置文件中
+
+   引入context名称空间
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:context="http://www.springframework.org/schema/context"
+          xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                              http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+                              http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+   ```
+
+3. 在Soring配置文件中使用标签引入外部属性文件
+
+   ```xml
+   <!--    引入外部属性文件-->
+   <context:property-placeholder location="classpath:jdbc.properties"></context:property-placeholder>
+   
+   <!--    配置连接池-->
+   <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+       <property name="driverClassName" value="${prop.driverClass}"></property>
+       <property name="url" value="${prop.url}"></property>
+       <property name="username" value="${prop.userName}"></property>
+       <property name="password" value="${prop.password}"></property>
+   </bean>
+   ```
+
+
+
+### 10、IOC操作Bean管理（基于注解方式）
+
+#### 10.1 什么是注解
+
+* 格式：@注解名称(属性名=属性值，属性名=属性值)
+* 使用注解：注解作用在类，方法，属性上
+* 使用目的：简化xml配置
+
+#### 10.2 Spring针对Bean管理中创建对象提供注解
+
+* @Component：普通用法
+* @Service：用于service业务逻辑层
+* @Controller：用于web层
+* @Repository：用于DAO持久层
+
+#### 10.3 基于注解方式实现对象创建例子
+
+1. 引入依赖
+
+   **apring-aop-5.2.6.RELEASE**
+
+2. 引入context名称空间
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:context="http://www.springframework.org/schema/context"
+          xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                              http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+                              http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+   ```
+
+3. 开启组件扫描
+
+   1、如果扫描多个包，多个包使用逗号隔开
+
+   2、扫描包的上层目录
+
+   ```xml
+   <context:component-scan base-package="com.atguigu"></context:component-sacn>
+   ```
+
+4. 创建类，在类上面添加创建对象注解
+
+   ```java
+   @Component(value = "User")
+   public class User {
+       public void add(){
+           System.out.println("service add......");
+       }
+   }
+   ```
+
+5. 测试
+
+   ```java
+   @Test
+   public void testService(){
+       //1.加载Spring配置文件
+       ApplicationContext context = new ClassPathXmlApplicationContext("base9.xml");
+   
+       //2.获取配置创建的对象
+       User user = context.getBean("User", User.class);
+   
+       user.add();
+   }
+   ```
+
+
+
+#### 10.4 开启组件扫描细节配置
+
+```xml
+<!--示例1
+        use-default-filters="false" 表示现在不使用默认filter，自己配置fillter
+        context:include-filter,设置扫描哪些内容
+    -->
+<context:component-scan base-package="com.spring5" use-default-filters="false">
+    <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+</context:component-scan>
+
+<!--示例2
+        下面配置扫描包所有内容
+        context:exclude-filter：设置哪些内容不进行扫描
+    -->
+<context:component-scan base-package="com.spring5">
+    <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+</context:component-scan>
+```
+
+
+
 
 
 
