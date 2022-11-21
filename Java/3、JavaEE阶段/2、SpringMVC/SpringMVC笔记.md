@@ -336,7 +336,7 @@ public String testRequestMapping(){
 
 ### 4、@RequestMapping注解的method属性
 
-@RequestMapping注解的method属性通过请求的请求方式（get或post）匹配请求映射
+@RequestMapping注解的method属性通过请求的请求方式（get或post）匹配请求映射，默认支持get和post
 
 @RequestMapping注解的method属性是一个RequestMethod类型的数组，表示该请求映射能够匹配多种请求方式的请求
 
@@ -577,7 +577,7 @@ public String testPOJO(User user){
 
 # 五、域对象共享数据
 
-### 1、使用ServletAPI向request域对象共享数据
+### 1、使用ServletAPI 向request域对象共享数据
 
 ```java
 @RequestMapping("/testServletAPI")
@@ -1196,7 +1196,7 @@ public String updateEmployee(Employee employee){
 }
 ```
 
-# 八、HttpMessageConverter
+# 九、HttpMessageConverter
 
 HttpMessageConverter，报文信息转换器，将请求报文转换为Java对象，或将Java对象转换为响应报文
 
@@ -1275,7 +1275,7 @@ a>导入jackson的依赖
 
 b>在SpringMVC的核心配置文件中开启mvc的注解驱动，此时在HandlerAdaptor中会自动装配一个消息转换器：MappingJackson2HttpMessageConverter，可以将响应到浏览器的Java对象转换为Json格式的字符串
 
-```
+```XML
 <mvc:annotation-driven />
 ```
 
@@ -1351,7 +1351,7 @@ public String testAjax(String username, String password){
 
 ResponseEntity用于控制器方法的返回值类型，该控制器方法的返回值就是响应到浏览器的响应报文
 
-# 九、文件上传和下载
+# 十、文件上传和下载
 
 ### 1、文件下载
 
@@ -1386,7 +1386,7 @@ public ResponseEntity<byte[]> testResponseEntity(HttpSession session) throws IOE
 
 ### 2、文件上传
 
-文件上传要求form表单的请求方式必须为post，并且添加属性enctype="multipart/form-data"
+文件上传要求form表单的请求方式必须为**post**，并且添加属性enctype="multipart/form-data"
 
 SpringMVC中将上传的文件封装到MultipartFile对象中，通过此对象可以获取文件相关信息
 
@@ -1434,7 +1434,7 @@ public String testUp(MultipartFile photo, HttpSession session) throws IOExceptio
 }
 ```
 
-# 十、拦截器
+# 十一、拦截器
 
 ### 1、拦截器的配置
 
@@ -1445,18 +1445,56 @@ SpringMVC中的拦截器需要实现HandlerInterceptor
 SpringMVC的拦截器必须在SpringMVC的配置文件中进行配置：
 
 ```xml
-<bean class="com.atguigu.interceptor.FirstInterceptor"></bean>
-<ref bean="firstInterceptor"></ref>
-<!-- 以上两种配置方式都是对DispatcherServlet所处理的所有的请求进行拦截 -->
-<mvc:interceptor>
-    <mvc:mapping path="/**"/>
-    <mvc:exclude-mapping path="/testRequestEntity"/>
+<mvc:interceptors>
+    <!-- 以上两种配置方式都是对DispatcherServlet所处理的所有的请求进行拦截 -->
+    <bean class="com.atguigu.interceptor.FirstInterceptor"></bean>
     <ref bean="firstInterceptor"></ref>
-</mvc:interceptor>
+    
+    <mvc:interceptor>
+        <mvc:mapping path="/**"/>
+        <mvc:exclude-mapping path="/testRequestEntity"/>
+        <ref bean="firstInterceptor"></ref>
+    </mvc:interceptor>
+<mvc:interceptors>
 <!-- 
 	以上配置方式可以通过ref或bean标签设置拦截器，通过mvc:mapping设置需要拦截的请求，通过mvc:exclude-mapping设置需要排除的请求，即不需要拦截的请求
 -->
 ```
+
+```java
+//Firstnterceptor.java
+@Component
+public class FirstInterceptor implements HandlerInterceptor {
+    /**
+     * 返回true不拦截，返回false拦截
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        System.out.println("preHandle");
+        return false;
+//        return HandlerInterceptor.super.preHandle(request, response, handler);
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        System.out.println("postHandle");
+//        HandlerInterceptor.super.postHandle(request, response, handler, modelAndView);
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        System.out.println("afterCompletion");
+//        HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
+    }
+}
+```
+
+
 
 ### 2、拦截器的三个抽象方法
 
@@ -1466,7 +1504,11 @@ preHandle：控制器方法执行之前执行preHandle()，其boolean类型的�
 
 postHandle：控制器方法执行之后执行postHandle()
 
-afterComplation：处理完视图和模型数据，渲染视图完毕之后执行afterComplation()
+afterCompletion：处理完视图和模型数据，渲染视图完毕之后执行afterCompletion()
+
+<img src="images/image-20221117110112633.png" alt="image-20221117110112633" style="zoom: 67%;" />
+
+
 
 ### 3、多个拦截器的执行顺序
 
@@ -1474,13 +1516,13 @@ a>若每个拦截器的preHandle()都返回true
 
 此时多个拦截器的执行顺序和拦截器在SpringMVC的配置文件的配置顺序有关：
 
-preHandle()会按照配置的顺序执行，而postHandle()和afterComplation()会按照配置的反序执行
+preHandle()会按照配置的顺序执行，而postHandle()和afterCompletion()会按照配置的反序执行
 
 b>若某个拦截器的preHandle()返回了false
 
-preHandle()返回false和它之前的拦截器的preHandle()都会执行，postHandle()都不执行，返回false的拦截器之前的拦截器的afterComplation()会执行
+preHandle()返回false和它之前的拦截器的preHandle()都会执行，postHandle()都不执行，返回false的拦截器之前的拦截器的afterCompletion()会执行
 
-# 十一、异常处理器
+# 十二、异常处理器
 
 ### 1、基于配置的异常处理
 
@@ -1526,7 +1568,7 @@ public class ExceptionController {
 }
 ```
 
-# 十二、注解配置SpringMVC
+# 十三、注解配置SpringMVC
 
 使用配置类和注解代替web.xml和SpringMVC配置文件的功能
 
@@ -1682,7 +1724,7 @@ public String index(){
 }
 ```
 
-# 十三、SpringMVC执行流程
+# 十四、SpringMVC执行流程
 
 ### 1、SpringMVC常用组件
 
