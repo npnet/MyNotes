@@ -579,6 +579,14 @@ public String testPOJO(User user){
 
 ### 1、使用ServletAPI 向request域对象共享数据
 
+```html
+<p th:text=${testScope}></p>
+<!-- 1、@{} : 超链接表达式-->
+<!-- 2、#{} : 消息、资源表达式-->
+<!-- 3、${} : 变量表达式-->
+<!-- 4、*{} : 选择表达式-->
+```
+
 ```java
 @RequestMapping("/testServletAPI")
 public String testServletAPI(HttpServletRequest request){
@@ -1662,13 +1670,13 @@ public class WebConfig implements WebMvcConfigurer {
     
     //配置视图控制
     
-    /*@Override
+    @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("index");
-    }*/
+    }
     
     //配置异常映射
-    /*@Override
+    @Override
     public void configureHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
         SimpleMappingExceptionResolver exceptionResolver = new SimpleMappingExceptionResolver();
         Properties prop = new Properties();
@@ -1678,7 +1686,7 @@ public class WebConfig implements WebMvcConfigurer {
         //设置共享异常信息的键
         exceptionResolver.setExceptionAttribute("ex");
         resolvers.add(exceptionResolver);
-    }*/
+    }
 
     //配置生成模板解析器
     @Bean
