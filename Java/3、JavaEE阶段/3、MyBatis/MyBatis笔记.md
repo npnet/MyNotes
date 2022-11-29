@@ -652,7 +652,38 @@ public void insertUser() {
 }
 ```
 # 八、自定义映射resultMap
+**解决字段名和属性不一致的问题**
+
+1. 为字段名起别名，保持和属性名一致
+
+2. 设置全局配置，将_自动映射为驼峰
+
+```xml
+<setting name="mapUnderscoreToCamelCase" value="true"></setting>
+```
+
+3. 通过ResultMap设置自定义的映射关系
+
+```xml
+<resultMap id="empResultMap" type="Emp">
+	<id property="eid" column="eid"></id>
+	<result property="empName" column="emp_name"></result>
+    <result property="age" column="age"></result>
+	<result property="sex" column="sex"></result>
+	<result property="email" column="email"></result>
+</resultMap>
+```
+
+```xml
+<select id="getAllEmp" resultMap="empResultMap">
+	select * from t_emp
+</select>
+```
+
+
+
 ## 1、resultMap处理字段和属性的映射关系
+
 - resultMap：设置自定义映射  
 	- 属性：  
 		- id：表示自定义映射的唯一标识，不能重复
@@ -679,20 +710,30 @@ public void insertUser() {
 ```
 - 若字段名和实体类中的属性名不一致，但是字段名符合数据库的规则（使用_），实体类中的属性名符合Java的规则（使用驼峰）。此时也可通过以下两种方式处理字段名和实体类中的属性的映射关系  
 
-	1. 可以通过为字段起别名的方式，保证和实体类中的属性名保持一致  
-		```xml
-		<!--List<Emp> getAllEmp();-->
-		<select id="getAllEmp" resultType="Emp">
-			select eid,emp_name empName,age,sex,email from t_emp
-		</select>
-		```
-	2. 可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
-		```xml
-	<settings>
-	   	<setting name="mapUnderscoreToCamelCase" value="true"/>
-	</settings>
-		```
+
+
+1. 可以通过为字段起别名的方式，保证和实体类中的属性名保持一致  	
+
+```xml
+<!--List<Emp> getAllEmp();-->
+<select id="getAllEmp" resultType="Emp">
+    select eid,emp_name empName,age,sex,email from t_emp
+</select>
+```
+
+2. 可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
+   	
+
+```xml
+<settings>
+    <setting name="mapUnderscoreToCamelCase" value="true"/>
+</settings>
+```
+
+
+
 ## 2、多对一映射处理
+
 >查询员工信息以及员工所对应的部门信息
 ```java
 public class Emp {  
@@ -905,19 +946,19 @@ public void getEmpAndDeptByStepOne() {
 - 开启后，需要用到查询dept的时候才会调用相应的SQL语句![](./images/延迟加载测试3.png)
 - fetchType：当开启了全局的延迟加载之后，可以通过该属性手动控制延迟加载的效果，fetchType="lazy(延迟加载)|eager(立即加载)"
 
-	```xml
-	<resultMap id="empAndDeptByStepResultMap" type="Emp">
-		<id property="eid" column="eid"></id>
-		<result property="empName" column="emp_name"></result>
-		<result property="age" column="age"></result>
-		<result property="sex" column="sex"></result>
-		<result property="email" column="email"></result>
-		<association property="dept"
-					 select="com.atguigu.mybatis.mapper.DeptMapper.getEmpAndDeptByStepTwo"
-					 column="did"
-					 fetchType="lazy"></association>
-	</resultMap>
-	```
+```xml
+<resultMap id="empAndDeptByStepResultMap" type="Emp">
+	<id property="eid" column="eid"></id>
+	<result property="empName" column="emp_name"></result>
+	<result property="age" column="age"></result>
+	<result property="sex" column="sex"></result>
+	<result property="email" column="email"></result>
+	<association property="dept"
+				 select="com.atguigu.mybatis.mapper.DeptMapper.getEmpAndDeptByStepTwo"
+				 column="did"
+				 fetchType="lazy"></association>
+</resultMap>
+```
 # 九、动态SQL
 - Mybatis框架的动态SQL技术是一种根据特定条件动态拼装SQL语句的功能，它存在的意义是为了解决拼接SQL语句字符串时的痛点问题
 ## 1、if
@@ -971,23 +1012,23 @@ public void getEmpAndDeptByStepOne() {
 ```
 - 注意：where标签不能去掉条件后多余的and/or
 
-	```xml
-	<!--这种用法是错误的，只能去掉条件前面的and/or，条件后面的不行-->
-	<if test="empName != null and empName !=''">
-	emp_name = #{empName} and
-	</if>
-	<if test="age != null and age !=''">
-		age = #{age}
-	</if>
-	```
+```xml
+<!--这种用法是错误的，只能去掉条件前面的and/or，条件后面的不行-->
+<if test="empName != null and empName !=''">
+emp_name = #{empName} and
+</if>
+<if test="age != null and age !=''">
+	age = #{age}
+</if>
+```
 ## 3、trim
 - trim用于去掉或添加标签中的内容  
 - 常用属性
-	- prefix：在trim标签中的内容的前面添加某些内容  
-	- suffix：在trim标签中的内容的后面添加某些内容 
-	- prefixOverrides：在trim标签中的内容的前面去掉某些内容  
-	- suffixOverrides：在trim标签中的内容的后面去掉某些内容
-- 若trim中的标签都不满足条件，则trim标签没有任何效果，也就是只剩下`select * from t_emp`
+  - prefix：在trim标签中的内容的前面添加某些内容  
+  - suffix：在trim标签中的内容的后面添加某些内容 
+  - prefixOverrides：在trim标签中的内容的前面去掉某些内容  
+  - suffixOverrides：在trim标签中的内容的后面去掉某些内容
+  - 若trim中的标签都不满足条件，则trim标签没有任何效果，也就是只剩下`select * from t_emp`
 ```xml
 <!--List<Emp> getEmpByCondition(Emp emp);-->
 <select id="getEmpByCondition" resultType="Emp">
@@ -1066,51 +1107,60 @@ public void getEmpByChoose() {
 	- close：设置foreach标签中的内容的结束符
 - 批量删除
 
-	```xml
-	<!--int deleteMoreByArray(Integer[] eids);-->
-	<delete id="deleteMoreByArray">
-		delete from t_emp where eid in
-		<foreach collection="eids" item="eid" separator="," open="(" close=")">
-			#{eid}
-		</foreach>
-	</delete>
-	```
-	```java
-	@Test
-	public void deleteMoreByArray() {
-		SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-		DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-		int result = mapper.deleteMoreByArray(new Integer[]{6, 7, 8, 9});
-		System.out.println(result);
-	}
-	```
-	![](./images/foreach测试结果1.png)
+```xml
+<!--int deleteMoreByArray(Integer[] eids);-->
+<delete id="deleteMoreByArray">
+	delete from t_emp where eid in
+	<foreach collection="eids" item="eid" separator="," open="(" close=")">
+		#{eid}
+	</foreach>
+</delete>
+```
+
+```java
+@Test
+public void deleteMoreByArray() {
+	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
+	DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+	int result = mapper.deleteMoreByArray(new Integer[]{6, 7, 8, 9});
+	System.out.println(result);
+}
+```
+![](./images/foreach测试结果1.png)
+
+
+
 - 批量添加
 
-	```xml
-	<!--int insertMoreByList(@Param("emps") List<Emp> emps);-->
-	<insert id="insertMoreByList">
-		insert into t_emp values
-		<foreach collection="emps" item="emp" separator=",">
-			(null,#{emp.empName},#{emp.age},#{emp.sex},#{emp.email},null)
-		</foreach>
-	</insert>
-	```
-	```java
-	@Test
-	public void insertMoreByList() {
-		SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-		DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-		Emp emp1 = new Emp(null,"a",1,"男","123@321.com",null);
-		Emp emp2 = new Emp(null,"b",1,"男","123@321.com",null);
-		Emp emp3 = new Emp(null,"c",1,"男","123@321.com",null);
-		List<Emp> emps = Arrays.asList(emp1, emp2, emp3);
-		int result = mapper.insertMoreByList(emps);
-		System.out.println(result);
-	}
-	```
-	![](./images/foreach测试结果2.png)
+```xml
+<!--int insertMoreByList(@Param("emps") List<Emp> emps);-->
+<insert id="insertMoreByList">
+    insert into t_emp values
+    <foreach collection="emps" item="emp" separator=",">
+        (null,#{emp.empName},#{emp.age},#{emp.sex},#{emp.email},null)
+    </foreach>
+</insert>
+```
+
+```java
+@Test
+public void insertMoreByList() {
+	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
+	DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+	Emp emp1 = new Emp(null,"a",1,"男","123@321.com",null);
+	Emp emp2 = new Emp(null,"b",1,"男","123@321.com",null);
+	Emp emp3 = new Emp(null,"c",1,"男","123@321.com",null);
+	List<Emp> emps = Arrays.asList(emp1, emp2, emp3);
+	int result = mapper.insertMoreByList(emps);
+	System.out.println(result);
+}
+```
+![](./images/foreach测试结果2.png)
+
+
+
 ## 6、SQL片段
+
 - sql片段，可以记录一段公共sql片段，在使用的地方通过include标签进行引入
 - 声明sql片段：`<sql>`标签
 ```xml
@@ -1126,64 +1176,61 @@ public void getEmpByChoose() {
 # 十、MyBatis的缓存
 ## 1、MyBatis的一级缓存
 - 一级缓存是SqlSession级别的，通过同一个SqlSession查询的数据会被缓存，下次查询相同的数据，就会从缓存中直接获取，不会从数据库重新访问  
-
 - 使一级缓存失效的四种情况：  
+  1. 不同的SqlSession对应不同的一级缓存  
+  2. 同一个SqlSession但是查询条件不同
+  3. 同一个SqlSession两次查询期间执行了任何一次增删改操作
+  4. 同一个SqlSession两次查询期间手动清空了缓存
 
-	1. 不同的SqlSession对应不同的一级缓存  
-	2. 同一个SqlSession但是查询条件不同
-	3. 同一个SqlSession两次查询期间执行了任何一次增删改操作
-	4. 同一个SqlSession两次查询期间手动清空了缓存
-	
-	```java
-	/**
-	* 测试一级缓存
-	* SqlSession级别
-	*/
-	@Test
-	public void testCacheOne(){
-	    SqlSession session = SqlSessionUtils.getSession();
-	    CacheMapper mapper = session.getMapper(CacheMapper.class);
-	    Emp emp1 = mapper.testCacheOne(2);
-	    System.out.println(emp1);
-	
-	    //两个不同的SqlSession
-	    //SqlSession session1 = SqlSessionUtils.getSession();
-	    //CacheMapper mapper1 = session1.getMapper(CacheMapper.class);
-	    //Emp emp2 = mapper1.testCacheOne(2);
-	    //System.out.println(emp2);
-	
-	    //同一个SqlSession，查询条件相同
-	    //Emp emp2 = mapper.testCacheOne(2);
-	    //System.out.println(emp2);
-	
-	    //同一个SqlSession，查询条件不同
-	    //Emp emp2 = mapper.testCacheOne(3);
-	    //System.out.println(emp2);
-	
-	    //同一个SqlSession,两次查询期间清空缓存
-	    //session.clearCache();
-	    //Emp emp2 = mapper.testCacheOne(2);
-	    //System.out.println(emp2);
-	
-	    //同一个SqlSession，两次查询期间完成一次增删改操作
-	    //DynamicSQLMapper mapper1 = session.getMapper(DynamicSQLMapper.class);
-	    //mapper1.insertMoreByList(Arrays.asList(new Emp(null,"test",null,null,null)));
-	    //Emp emp2 = mapper.testCacheOne(2);
-	    //System.out.println(emp2);
-	}
-	```
-	
-	
+```java
+/**
+* 测试一级缓存
+* SqlSession级别
+*/
+@Test
+public void testCacheOne(){
+    SqlSession session = SqlSessionUtils.getSession();
+    CacheMapper mapper = session.getMapper(CacheMapper.class);
+    Emp emp1 = mapper.testCacheOne(2);
+    System.out.println(emp1);
+
+    //两个不同的SqlSession
+    //SqlSession session1 = SqlSessionUtils.getSession();
+    //CacheMapper mapper1 = session1.getMapper(CacheMapper.class);
+    //Emp emp2 = mapper1.testCacheOne(2);
+    //System.out.println(emp2);
+
+    //同一个SqlSession，查询条件相同
+    //Emp emp2 = mapper.testCacheOne(2);
+    //System.out.println(emp2);
+
+    //同一个SqlSession，查询条件不同
+    //Emp emp2 = mapper.testCacheOne(3);
+    //System.out.println(emp2);
+
+    //同一个SqlSession,两次查询期间清空缓存
+    //session.clearCache();
+    //Emp emp2 = mapper.testCacheOne(2);
+    //System.out.println(emp2);
+
+    //同一个SqlSession，两次查询期间完成一次增删改操作
+    //DynamicSQLMapper mapper1 = session.getMapper(DynamicSQLMapper.class);
+    //mapper1.insertMoreByList(Arrays.asList(new Emp(null,"test",null,null,null)));
+    //Emp emp2 = mapper.testCacheOne(2);
+    //System.out.println(emp2);
+}
+```
+
+
+​	
 ## 2、MyBatis的二级缓存
 - 二级缓存是SqlSessionFactory级别，通过同一个SqlSessionFactory创建的SqlSession查询的结果会被缓存；此后若再次执行相同的查询语句，结果就会从缓存中获取  
-
 - 二级缓存开启的条件
+  1. 在核心配置文件中，设置全局配置属性cacheEnabled="true"，默认为true，不需要设置
+  2. 在映射文件中设置标签<cache />
+  3. 二级缓存必须在SqlSession关闭或提交之后有效
+  4. 查询的数据所转换的实体类类型必须实现序列化的接口
 
-	1. 在核心配置文件中，设置全局配置属性cacheEnabled="true"，默认为true，不需要设置
-	2. 在映射文件中设置标签<cache />
-	3. 二级缓存必须在SqlSession关闭或提交之后有效
-	4. 查询的数据所转换的实体类类型必须实现序列化的接口
-	
 - 使二级缓存失效的情况：两次查询之间执行了任意的增删改，会使一级和二级缓存同时失效
 
   ```java
