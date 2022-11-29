@@ -689,7 +689,7 @@ public void insertUser() {
 	2. 可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
 		```xml
 	<settings>
-	    <setting name="mapUnderscoreToCamelCase" value="true"/>
+	   	<setting name="mapUnderscoreToCamelCase" value="true"/>
 	</settings>
 		```
 ## 2、多对一映射处理
@@ -1126,21 +1126,96 @@ public void getEmpByChoose() {
 # 十、MyBatis的缓存
 ## 1、MyBatis的一级缓存
 - 一级缓存是SqlSession级别的，通过同一个SqlSession查询的数据会被缓存，下次查询相同的数据，就会从缓存中直接获取，不会从数据库重新访问  
+
 - 使一级缓存失效的四种情况：  
 
 	1. 不同的SqlSession对应不同的一级缓存  
 	2. 同一个SqlSession但是查询条件不同
 	3. 同一个SqlSession两次查询期间执行了任何一次增删改操作
 	4. 同一个SqlSession两次查询期间手动清空了缓存
+	
+	```java
+	/**
+	* 测试一级缓存
+	* SqlSession级别
+	*/
+	@Test
+	public void testCacheOne(){
+	    SqlSession session = SqlSessionUtils.getSession();
+	    CacheMapper mapper = session.getMapper(CacheMapper.class);
+	    Emp emp1 = mapper.testCacheOne(2);
+	    System.out.println(emp1);
+	
+	    //两个不同的SqlSession
+	    //SqlSession session1 = SqlSessionUtils.getSession();
+	    //CacheMapper mapper1 = session1.getMapper(CacheMapper.class);
+	    //Emp emp2 = mapper1.testCacheOne(2);
+	    //System.out.println(emp2);
+	
+	    //同一个SqlSession，查询条件相同
+	    //Emp emp2 = mapper.testCacheOne(2);
+	    //System.out.println(emp2);
+	
+	    //同一个SqlSession，查询条件不同
+	    //Emp emp2 = mapper.testCacheOne(3);
+	    //System.out.println(emp2);
+	
+	    //同一个SqlSession,两次查询期间清空缓存
+	    //session.clearCache();
+	    //Emp emp2 = mapper.testCacheOne(2);
+	    //System.out.println(emp2);
+	
+	    //同一个SqlSession，两次查询期间完成一次增删改操作
+	    //DynamicSQLMapper mapper1 = session.getMapper(DynamicSQLMapper.class);
+	    //mapper1.insertMoreByList(Arrays.asList(new Emp(null,"test",null,null,null)));
+	    //Emp emp2 = mapper.testCacheOne(2);
+	    //System.out.println(emp2);
+	}
+	```
+	
+	
 ## 2、MyBatis的二级缓存
 - 二级缓存是SqlSessionFactory级别，通过同一个SqlSessionFactory创建的SqlSession查询的结果会被缓存；此后若再次执行相同的查询语句，结果就会从缓存中获取  
+
 - 二级缓存开启的条件
 
 	1. 在核心配置文件中，设置全局配置属性cacheEnabled="true"，默认为true，不需要设置
 	2. 在映射文件中设置标签<cache />
 	3. 二级缓存必须在SqlSession关闭或提交之后有效
 	4. 查询的数据所转换的实体类类型必须实现序列化的接口
+	
 - 使二级缓存失效的情况：两次查询之间执行了任意的增删改，会使一级和二级缓存同时失效
+
+  ```java
+  /**
+  * 测试二级缓存
+  * SqlSessionFactory级别
+  */
+  @Test
+  public void testCacheTwo(){
+      SqlSessionFactory sqlSessionFactory = null;
+      try {
+          InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+          sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
+      } catch (IOException e) {
+          throw new RuntimeException(e);
+      }
+  
+      SqlSession sqlSession = sqlSessionFactory.openSession(true);
+      CacheMapper mapper = sqlSession.getMapper(CacheMapper.class);
+      Emp emp1 = mapper.testCacheTwo(2);
+      sqlSession.close();
+      System.out.println(emp1);
+  
+      SqlSession sqlSession2 = sqlSessionFactory.openSession(true);
+      CacheMapper mapper2 = sqlSession2.getMapper(CacheMapper.class);
+      Emp emp2 = mapper2.testCacheTwo(2);
+      sqlSession2.close();
+      System.out.println(emp2);
+  }
+  ```
+
+  
 ## 3、二级缓存的相关配置
 - 在mapper配置文件中添加的cache标签可以设置一些属性
 - eviction属性：缓存回收策略  
