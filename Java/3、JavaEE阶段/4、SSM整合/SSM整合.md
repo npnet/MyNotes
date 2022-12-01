@@ -6,9 +6,9 @@
 
 Spring提供了监听器ContextLoaderListener，实现ServletContextListener接口，可监听
 
-ServletContext的状态，在web服务器的启动，读取Spring的配置文件，创建Spring的IOC容器。web
+ServletContext的状态，在web服务器的启动，读取Spring的配置文件，创建Spring的IOC容器。
 
-应用中必须在web.xml中配置
+web应用中必须在web.xml中配置
 
 ```xml
 <listener>
@@ -244,6 +244,10 @@ CREATE TABLE `t_emp` (
         </bean>
     </property>
 </bean>
+
+<!--配置文件上传解析器-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"></bean>
+
 <!-- 配置访问首页的视图控制 -->
 <mvc:view-controller path="/" view-name="index"></mvc:view-controller>
 <!-- 配置默认的servlet处理静态资源 -->
@@ -340,7 +344,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                            https://www.springframework.org/schema/context/spring-context.xsd">
     <!--扫描组件-->
     <context:component-scan base-package="com.atguigu.ssm">
-        <context:exclude-filter type="annotation"expression="org.springframework.stereotype.Controller"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
     </context:component-scan>
     <!-- 引入jdbc.properties -->
     <context:property-placeholder location="classpath:jdbc.properties">
