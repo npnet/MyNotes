@@ -356,23 +356,29 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <property name="username" value="${jdbc.username}"></property>
         <property name="password" value="${jdbc.password}"></property>
     </bean>
+    
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <!--开启事务的注解驱动-->
+    <tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>
+    
     <!-- 配置用于创建SqlSessionFactory的工厂bean -->
     <bean class="org.mybatis.spring.SqlSessionFactoryBean">
         <!-- 设置MyBatis配置文件的路径（可以不设置） -->
-        <property name="configLocation" value="classpath:mybatis-config.xml">
-        </property>
+        <property name="configLocation" value="classpath:mybatis-config.xml"></property>
         <!-- 设置数据源 -->
         <property name="dataSource" ref="dataSource"></property>
         <!-- 设置类型别名所对应的包 -->
-        <property name="typeAliasesPackage" value="com.atguigu.ssm.pojo">
-        </property>
+        <property name="typeAliasesPackage" value="com.atguigu.ssm.pojo"></property>
         <!--
             设置映射文件的路径
             若映射文件所在路径和mapper接口所在路径一致，则不需要设置
         -->
         <!--
-            <property name="mapperLocations" value="classpath:mapper/*.xml">
-            </property>
+            <property name="mapperLocations" value="classpath:mapper/*.xml"></property>
         -->
     </bean>
     <!--
@@ -442,6 +448,51 @@ public class Employee {
 }
 ```
 
+
+
+创建接口EmployeeMapper
+
+```java
+public interface EmployeeMapper {
+    /**
+     * 获取全部员工列表
+     * @return
+     */
+    List<Employee> getAllEmployeeList();
+
+    /**
+     * 通过分页查询员工信息
+     * @param pageNum
+     * @return
+     */
+    List<Employee> getEmployeeList(@Param("pageNum") Integer pageNum);
+}
+```
+
+
+
+创建映射文件EmployeeMapper.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java.ssm.mapper.EmployeeMapper">
+    <!--List<Employee> getAllEmployeeList();-->
+    <select id="getAllEmployeeList" resultType="Employee">
+        select * from t_emp
+    </select>
+
+    <!--List<Employee> getEmployeeList(Integer pageNum);-->
+    <select id="getEmployeeList" resultType="Employee">
+        select * from t_emp
+    </select>
+</mapper>
+```
+
+
+
 创建控制层组件EmployeeController
 
 ```java
@@ -483,7 +534,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 }
 ```
 
-### ②创建页面
+### ②创建页面 
+
+employee_list.html
 
 ```html
 <!DOCTYPE html>
