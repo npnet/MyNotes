@@ -307,7 +307,7 @@ qDebug() << m;
 
 ### 3.QMainWindow
 
-![QMainWindow.jpg](https://i.loli.net/2021/09/27/MXrp4asgUFY2JWc.jpg)
+![QMainWindow.jpg](images/MXrp4asgUFY2JWc.jpg)
 
 #### 3.1 菜单栏
 
