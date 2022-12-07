@@ -60,6 +60,227 @@ tomcat                latest    46cfbf1293b1   13 days ago     668MB
 
 
 
+### 1.3 分层理解
+
+思考：为什么Docker镜像要采用分层结构？
+
+最大好处莫过于资源共享，比如有多个镜像都从相同的Base镜像构建而来，那么宿主机只需在磁盘上保留一份base镜像，同时内存中也只需要加载一份base镜像，这样就可以为所有的容器服务，而且镜像的每一层都可以被共享
+
+```shell
+[root@iZwz9b8v7o84uw1vut700pZ ~]# docker image inspect nginx:latest
+[
+    {
+        "Id": "sha256:605c77e624ddb75e6110f997c58876baa13f8754486b461117934b24a9dc3a85",
+        "RepoTags": [
+            "nginx:latest"
+        ],
+        "RepoDigests": [
+            "nginx@sha256:0d17b565c37bcbd895e9d92315a05c1c3c9a29f762b011a10c54a66cd53c9b31"
+        ],
+        "Parent": "",
+        "Comment": "",
+        "Created": "2021-12-29T19:28:29.892199479Z",
+        "Container": "ca3e48389f7160bc9d9a892d316fcbba459344ee3679998739b1c3cd8e56f7da",
+        "ContainerConfig": {
+            "Hostname": "ca3e48389f71",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "ExposedPorts": {
+                "80/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NGINX_VERSION=1.21.5",
+                "NJS_VERSION=0.7.1",
+                "PKG_RELEASE=1~bullseye"
+            ],
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "#(nop) ",
+                "CMD [\"nginx\" \"-g\" \"daemon off;\"]"
+            ],
+            "Image": "sha256:82941edee2f4d17c55563bb926387c3ae39fa1a99777f088bc9d3db885192209",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": [
+                "/docker-entrypoint.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+            },
+            "StopSignal": "SIGQUIT"
+        },
+        "DockerVersion": "20.10.7",
+        "Author": "",
+        "Config": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "ExposedPorts": {
+                "80/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NGINX_VERSION=1.21.5",
+                "NJS_VERSION=0.7.1",
+                "PKG_RELEASE=1~bullseye"
+            ],
+            "Cmd": [
+                "nginx",
+                "-g",
+                "daemon off;"
+            ],
+            "Image": "sha256:82941edee2f4d17c55563bb926387c3ae39fa1a99777f088bc9d3db885192209",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": [
+                "/docker-entrypoint.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+            },
+            "StopSignal": "SIGQUIT"
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 141479488,
+        "VirtualSize": 141479488,
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/4c79c395f5276d6c16a5bb333597bd738c7fa91b2416db4e794feef3da840fd7/diff:/var/lib/docker/overlay2/d470f08d952b1012089ae05d2805014103385170fdfa4ae501190faef6abf68e/diff:/var/lib/docker/overlay2/aaed06144bf25b92f0a78704427cf79b9a9b4b7f4812173b3443d2d09ce59b09/diff:/var/lib/docker/overlay2/8f7e3a46f2c363ebb060a3695efc59fbec3202b01a9a6f17af4b607a93e84133/diff:/var/lib/docker/overlay2/8693e5bafb4e5803078339692b1733d67ce51cfdd37109e0a8cbec45103827cc/diff",
+                "MergedDir": "/var/lib/docker/overlay2/3781000955df3873afe2989265b4576804fc9cf710696d18db89c11a502e2446/merged",
+                "UpperDir": "/var/lib/docker/overlay2/3781000955df3873afe2989265b4576804fc9cf710696d18db89c11a502e2446/diff",
+                "WorkDir": "/var/lib/docker/overlay2/3781000955df3873afe2989265b4576804fc9cf710696d18db89c11a502e2446/work"
+            },
+            "Name": "overlay2"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:2edcec3590a4ec7f40cf0743c15d78fb39d8326bc029073b41ef9727da6c851f",
+ "sha256:e379e8aedd4d72bb4c529a4ca07a4e4d230b5a1d3f7a61bc80179e8f02421ad8",
+ "sha256:b8d6e692a25e11b0d32c5c3dd544b71b1085ddc1fddad08e68cbd7fda7f70221",
+ "sha256:f1db227348d0a5e0b99b15a096d930d1a69db7474a1847acbc31f05e4ef8df8c",
+ "sha256:32ce5f6a5106cc637d09a98289782edf47c32cb082dc475dd47cbf19a4f866da",
+ "sha256:d874fd2bc83bb3322b566df739681fbd2248c58d3369cb25908d68e7ed6040a6"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        }
+    }
+]
+```
+
+这里指示了分层信息：
+
+```shell
+"RootFS": {
+            "Type": "layers",
+            "Layers": [
+ "sha256:2edcec3590a4ec7f40cf0743c15d78fb39d8326bc029073b41ef9727da6c851f",
+ "sha256:e379e8aedd4d72bb4c529a4ca07a4e4d230b5a1d3f7a61bc80179e8f02421ad8",
+ "sha256:b8d6e692a25e11b0d32c5c3dd544b71b1085ddc1fddad08e68cbd7fda7f70221",
+ "sha256:f1db227348d0a5e0b99b15a096d930d1a69db7474a1847acbc31f05e4ef8df8c",
+ "sha256:32ce5f6a5106cc637d09a98289782edf47c32cb082dc475dd47cbf19a4f866da",
+ "sha256:d874fd2bc83bb3322b566df739681fbd2248c58d3369cb25908d68e7ed6040a6"
+            ]
+        },
+```
+
+
+
+在添加额外的镜像层的同时，镜像始终保持是当前所有镜像的组合。下图例子中，每个镜像层包含3个文件，而镜像包含了来自两个镜像层的6个文件
+
+![image-20221207113317316](images/image-20221207113317316.png)
+
+下图中展示了一个稍微复杂的三层镜像，在外部看来整个镜像只有6个文件，这是因为最上层的文件7是文件5的一个更新版本
+
+![image-20221207113443894](images/image-20221207113443894.png)
+
+这种情况下，上传镜像层中的文件覆盖了底层镜像层中的文件，这样就使得文件的更新版本作为一个新镜像添加到镜像当中。
+
+Docker通过存储引擎（新版本采用快照机制）的方式来实现镜像层堆栈，并保证多镜像层对外展示为统一的文件系统
+
+Docker在Window上仅支持windowfilter的一种存储引擎，改引擎基于NTFS文件系统上实现了分层和Cow
+
+下图展示了与系统显示相同的三层镜像，所有镜像堆叠合并，并对外提供统一的视图
+
+![image-20221207113751268](images/image-20221207113751268.png)
+
+**特点**
+
+> Docker镜像都是只读的，当容器启动时，一个新的可写层被加载到镜像的顶部
+>
+> 这一层就是容器层，容器之下的都叫镜像层
+
+![image-20221207113951283](images/image-20221207113951283.png)
+
+
+
+### 1.4 提交镜像
+
+```shell
+#使用docker commit 命令提交容器成为一个新的版本
+docker commit -m="提交的描述信息"  -a="作者" 容器id 目标镜像名:[TAG] 
+```
+
+由于默认的Tomcat镜像的webapps文件夹中没有任何内容，需要从webapps.dist中拷贝文件到webapps文件夹。下面自行制作镜像：就是从webapps.dist中拷贝文件到webapps文件夹下，并提交该镜像作为一个新的镜像。使得该镜像默认的webapps文件夹下就有文件。具体命令如下：
+
+```shell
+# 启动默认tomcat，发现webapps目录下没有东西
+[root@iZwz9b8v7o84uw1vut700pZ ~]# docker run -it --rm tomcat:9.0
+[root@iZwz9b8v7o84uw1vut700pZ ~]# docker exec -it 34a4760d9b87 /bin/bash
+
+root@34a4760d9b87:/usr/local/tomcat# cp -r webapps.dist/* webapps
+root@34a4760d9b87:/usr/local/tomcat# cd webapps
+root@34a4760d9b87:/usr/local/tomcat/webapps# ls
+ROOT  docs  examples  host-manager  manager
+```
+
+ip:8080访问，可以看到tomcat的默认首页
+
+如果无法访问，记得查看Linux防火墙的8080端口以及阿里云的安全组有没有开放8080端口
+
+```shell
+# 提交自己的镜像  docker commit -m="add webapps" -a="Kay" 34a4760d9b87 mytomcat:1.0
+[root@iZwz9b8v7o84uw1vut700pZ ~]# docker commit -m="add webapps" -a="Kay" 34a4760d9b87 mytomcat:1.0
+sha256:17cb58cc1f500837eb2bb56ba1802cf2011d7a53b1e9d3f92928b5d7458c1e97
+
+# 可以看到我们自己的镜像 mytomcat 已经提交好了，版本号也是我们自己设定的版本号 1.0
+[root@iZwz9b8v7o84uw1vut700pZ ~]# docker images
+REPOSITORY            TAG          IMAGE ID       CREATED         SIZE
+mytomcat              1.0          17cb58cc1f50   8 seconds ago   685MB
+rabbitmq              management   32d80c948e6c   11 days ago     257MB
+mongo                 latest       b21ad2afe409   13 days ago     700MB
+nginx                 latest       605c77e624dd   3 months ago    141MB
+tomcat                9.0          b8e65a4d736d   4 months ago    680MB
+hello-world           latest       feb5d9fea6a5   7 months ago    13.3kB
+centos                latest       5d0da3dc9764   7 months ago    231MB
+portainer/portainer   latest       580c0e4e98b0   13 months ago   79.1MB
+```
+
+一个小技巧
+
+**如果想要保存当前容器的状态，就可以通过commit来提交，获得一个镜像就好比虚拟机中的快照，可以保存当前的状态**
+
+
+
 ## 2、容器数据卷
 
 ![image-20221206093024283](images/image-20221206093024283.png)
@@ -70,91 +291,270 @@ tomcat                latest    46cfbf1293b1   13 days ago     668MB
 
 ### 2.2 使用容器数据卷
 
-#### 2.2.1 直接使用命令
-
 ```shell
 docker run -it -v 主机内目录:容器内目录 镜像名/id
 ```
 
-将容器内目录挂载到主机内目录上，通过**docker inspect [容器名/ID]**命令查看该容器即可看到挂载信息
-
-![image-20221206094422499](images/image-20221206094422499.png)
+将主机目录/home/test和容器/home建立数据卷
 
 ```shell
-# 挂载命令
-[root@iZ1608aqb7ntn9Z 20210806]# docker run -it -v /opt/Docker/20210806/:/opt centos /bin/bash
-
-# 进入到容器内部
-[root@e749444d0ee1 /]# cd opt/
-[root@e749444d0ee1 opt]# ls -l
-total 0
--rw-r--r-- 1 root root 0 Aug  6 03:35 ymx
-
-# 查看本机
-[root@iZ1608aqb7ntn9Z ~]# cd /opt/Docker/20210806/
-[root@iZ1608aqb7ntn9Z 20210806]# ll
-总用量 0
--rw-r--r-- 1 root root 0 8月   6 11:35 ymx 
-
-# docker inspect [容器名或ID] 查看挂载
-[root@iZ1608aqb7ntn9Z 20210806]# docker inspect e749444d0ee1 
-......
-     "Mounts": [
-            {
-                "Type": "bind",
-                "Source": "/opt/Docker/20210806",  # 对应主机的源目录
-                "Destination": "/opt",    # 容器中的目录
-                "Mode": "",
-                "RW": true,
-                "Propagation": "rprivate"
-            }
-        ],
-......
+docker run -it -v /home/test:/home centos /bin/bash
 ```
 
-建立挂载关系后，只要使用命令在主机内新建一个文件：
+可以发现，home目录下多了test这个文件夹，接下来，容器里面的home目录下的内容都会自动同步到宿主机下的 /home/test目录，在宿主机的内容也会自动同步到容器内
+
+![image-20221207115059367](images/image-20221207115059367.png)
+
+查看是否挂载成功
 
 ```shell
-touch /home/mountdir/test.txt
+[root@VM-20-17-centos home]# docker inspect df7f51983d11(这个是容器id)
 ```
 
-就会在容器内的挂载目录下发现相同的文件(test.txt)，从而实现了容器和主机的文件同步和共享：
-
-![image-20221206095326526](images/image-20221206095326526.png)
+![image-20221207115140429](images/image-20221207115140429.png)
 
 
 
-### 2.3 匿名挂载
+1. 在主机内新建一个文件：
+
+```shell
+[root@df7f51983d11 home]# touch test.java
+[root@df7f51983d11 home]# ls
+test.java
+```
+
+在宿主机的test下查看
+
+```shell
+[root@VM-20-17-centos home]# cd test
+[root@VM-20-17-centos test]# ls
+test.java
+```
+
+2. 在宿主机添加文件
+
+```shell
+[root@VM-20-17-centos test]# touch test02.java
+```
+
+在容器内部查看
+
+```shell
+[root@df7f51983d11 home]# ls
+test.java  test02.java
+```
+
+退出容器（退出容器，宿主机的操作依旧会同步到容器）
+
+```shell
+[root@df7f51983d11 home]# exit
+exit
+```
+
+小技巧
+
+**通同步后，以后只需要在宿主机修改配置文件，容器内的配置就会自动同步，而不需要每次都进入容器去修改配置**
+
+
+
+### 2.3 MySql容器建立数据卷同步数据
+
+这里宿主机如果已经有安装Mysql的话，很可能发生冲突，很大可能是本机挂载的配置文件中已经有文件，将容器中的配置给覆盖了，我们将相应的本机文件中的文件配置删除即可
+
+```shell
+[root@VM-20-17-centos ~]# docker pull mysql:5.7  #拉取镜像
+# 运行容器，需要做数据挂载
+# 安装启动mysql，需要配置mysql的密码，不然启动不了
+# 官方   docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7
+# -v 数据卷挂载，下面的命令是挂载mysql的配置文件 conf.d和mysql的数据文件 data，并且给mysql设置密码
+# -e 环境配置
+# --name 容器名字
+# 开的端口号记得去阿里云的安全组打开
+docker run -d -p 3310:3306 -v /home/mysql/conf:/etc/mysql/conf.d -v /home/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name mysql01 mysql:5.7
+
+# 启动成功之后，我这里是在本地使用navicat来连接测试
+# navicat连接到服务器的3310端口 ，3310和容器内的3306端口映射，然后成功连接
+
+docker rm -f mysql01  #就算把容器删除，宿主机本地的数据依旧还在。如果是在容器内部进行删除数据的操作，那么宿主机就会同步删除，但这里是直接把整个容器删掉，是容器外部的操作，所以宿主机的数据还是会存在的
+
+```
+
+
+
+## 3、具名挂载和匿名挂载
+
+### 3.1 匿名挂载
+
+匿名挂载就是在指定数据卷的时候，不指定容器路径对应的主机路径，这样对应的映射的主机路径就是默认的路径/var/lib/docker/volumes/中自动生成的一个随机命名的文件夹
 
 ```shell
 docker run -d  -v 容器内目录  镜像名/id  # 匿名挂载
 ```
 
-匿名挂载后，使用**docker volume ls**命令查看所有挂载的卷：
-
-![image-20221206132225469](images/image-20221206132225469.png)
-
-每一个VOLUME NAME对应一个挂载的卷，由于挂载时未指定主机目录，因此无法直接找到目录
-
-
-
-### 2.4 具名挂载
+如下运行并匿名挂载Nginx容器：
 
 ```shell
-docker run -d  -v 卷名:容器内目录  镜像名/id  # 具名挂载
+# -P (大写P表示随机映射端口)
+# -v后面如果只有一个路径，那就是容器内部的路径。（不指定宿主机的路径的话，宿主机会自动生成目录）
+[root@VM-20-17-centos ~]# docker run -d -P --name nginx01 -v /etc/nginx nginx
+
+# 查看所有的数据卷volume的情况, VOLUME NAME这里的值是真实存在的目录。（ VOLUME NAME的值是一串数字和字母，所以称之为匿名挂载）
+[root@VM-20-17-centos ~]# docker volume ls
+DRIVER    VOLUME NAME
+local     0736e4097e5bb9b62b24e5f51088b37cf8271df9edd4f8ff1c8f3284fce72983
+
+# 查看匿名挂载的卷在宿主机中的位置
+[root@VM-20-17-centos ~]# docker volume inspect 0736e4097e5bb9b62b24e5f51088b37cf8271df9edd4f8ff1c8f3284fce72983
+
+
+[
+    {
+        "CreatedAt": "2022-04-26T08:50:12+08:00",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/0736e4097e5bb9b62b24e5f51088b37cf8271df9edd4f8ff1c8f3284fce72983/_data",
+        "Name": "0736e4097e5bb9b62b24e5f51088b37cf8271df9edd4f8ff1c8f3284fce72983",
+        "Options": null,
+        "Scope": "local"
+    }
+]
 ```
 
-![image-20221206132433141](images/image-20221206132433141.png)
-
-可以发现挂载的卷：volume01，并通过**docker volume inspect 卷名**命令找到主机内目录：
-
-![image-20221206132559059](images/image-20221206132559059.png)
-
-所有docker容器内的卷，在未指定主机内目录时，都在：/var/lib/docker/volumes/卷名/_data下，可通过具名挂载可以方便找到卷，因此广泛使用这种方式进行挂载
 
 
+### 3.2 具名挂载
 
-### 2.5 数据卷容器
+具名挂载，就是指定文件夹名称，区别于指定路径挂载，这里的指定文件夹名称是在Docker指定的默认数据卷路径下的。通过**docker volume ls**命令可以查看当前数据卷的目录情况
+
+```shell
+# 通过 -v 卷名:容器内路径 ，这种方式来指定卷的名字，注意这里juming-nginx前面是没有/的，如果带了/，那就变成路径而不是名字了
+[root@VM-20-17-centos ~]# docker run -d -P --name nginx02 -v juming-nginx:/etc/nginx nginx
+629b1917332cc9f8529e8ea785c75aa3be813e21b41b0a05c9f795a254f85caf
+
+[root@VM-20-17-centos ~]# docker volume ls
+DRIVER    VOLUME NAME
+local     0736e4097e5bb9b62b24e5f51088b37cf8271df9edd4f8ff1c8f3284fce72983
+local     juming-nginx
+```
+
+查看指定的数据卷信息的命令：
+
+```shell
+docker volume inspect 数据卷名称
+```
+
+```shell
+[root@VM-20-17-centos ~]# docker volume inspect juming-nginx
+[
+    {
+        "CreatedAt": "2022-04-26T08:54:52+08:00",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/juming-nginx/_data",
+        "Name": "juming-nginx",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+```
+
+可以看到主机数据挂载在/var/lib/docker/volumes/juming-nginx/_data上
+
+**Docker所有数据卷默认在/var/lib/docker/volumes/卷名/_data目录下**
+
+```shell
+[root@VM-20-17-centos ~]# cd /var/lib/docker/volumes
+[root@VM-20-17-centos volumes]# ls
+0736e4097e5bb9b62b24e5f51088b37cf8271df9edd4f8ff1c8f3284fce72983  backingFsBlockDev  juming-nginx  metadata.db
+```
+
+匿名挂载、具名挂载，指定路径挂载的命令区别如下：
+
+```shell
+-v 容器内路径 #匿名挂载
+-v 卷名:容器内路径 #具名挂载
+-v /宿主机路径:容器内路径 #指定路径挂载
+
+指定数据卷映射的相关参数：
+ro —— readonly 只读。设置了只读则只能操作宿主机的路径，不能操作容器中的对应路径(在容器内部无法操作)。
+rw ----- readwrite 可读可写
+```
+
+
+
+
+
+## 4、DockerFile
+
+### 4.1 初识DockerFile
+
+Dockerfile是用来构建docker镜像的文件
+
+前面用docker run 的方式进行挂载，还可以在Dockerfile中使用VOLUME指令来给镜像添加一个或多个数据卷
+
+```shell
+[root@VM-20-17-centos home]# mkdir docker-test-volume
+[root@VM-20-17-centos home]# ls
+docker-test-volume  lighthouse  test
+[root@VM-20-17-centos docker-test-volume]# vim dockerfile1
+```
+
+使用Dockerfile构建一个新的镜像，dockerfile1文件的内容，匿名挂载了volume01和volume02两个目录
+
+```shell
+# 创建一个dockerFile文件，这里每个命令，就是镜像的每一层
+FROM centos
+
+VOLUME ["volume01","volume02"]
+
+CMD echo "----end----"
+CMD /bin/bash
+```
+
+```shell
+# 构建镜像
+[root@VM-20-17-centos docker-test-volume]# docker build -f /home/docker-test-volume/dockerfile1 -t jackson/centos:1.0 .
+Sending build context to Docker daemon  2.048kB
+Step 1/4 : FROM centos
+ ---> 5d0da3dc9764
+Step 2/4 : VOLUME ["volume01","volume02"]
+ ---> Running in 964276445ecc
+Removing intermediate container 964276445ecc
+ ---> 1ffae309159a
+Step 3/4 : CMD echo "----end----"
+ ---> Running in 1a48788e5f5d
+Removing intermediate container 1a48788e5f5d
+ ---> 905494613c71
+Step 4/4 : CMD /bin/bash
+ ---> Running in 5079de04d995
+Removing intermediate container 5079de04d995
+ ---> 556edf4fffd4
+Successfully built 556edf4fffd4
+Successfully tagged jackson/centos:1.0
+# 查看镜像
+[root@VM-20-17-centos docker-test-volume]# docker images
+REPOSITORY       TAG       IMAGE ID       CREATED          SIZE
+jackson/centos   1.0       556edf4fffd4   44 seconds ago   231MB
+nginx            latest    fa5269854a5e   5 days ago       142MB
+mysql            5.7       82d2d47667cf   5 days ago       450MB
+centos           latest    5d0da3dc9764   7 months ago     231MB
+```
+
+```shell
+
+[root@VM-20-17-centos docker-test-volume]# docker run -it 556edf4fffd4 /bin/bash
+# 可以发现，刚刚挂载的两个目录volume01和volume02已经生成
+[root@a6ddee3ff853 /]# ls  
+bin  dev  etc  home  lib  lib64  lost+found  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var  volume01	volume02
+```
+
+
+
+### 4.2 容器数据卷
+
+容器之间的数据共享，可以通过容器数据卷
+
+容器数据卷是指建立数据卷，来同步多个容器间的数据，实现容器间的数据同步
 
 ![image-20221206133921563](images/image-20221206133921563.png)
 
@@ -162,21 +562,183 @@ docker run -d  -v 卷名:容器内目录  镜像名/id  # 具名挂载
 docker run -it --name container02 --volumes-from container01 镜像名/id  # 将两个容器进行挂载
 ```
 
-
-
-## 3、DockerFile
-
-Dockerfile是用来构建docker镜像的文件
-
-### 3.1 构建步骤：
-
-编写一个dockerfile文件，随后运行命令：
+首先启动容器1，volume01、volume02为挂载目录
 
 ```shell
-docker build -f 文件路径 -t 镜像名 .  # 文件名为Dockerfile时可省略且最后的.不要忽略
-docker run     # 运行镜像
-docker push    # 发布镜像
+[root@VM-20-17-centos docker-test-volume]# docker images
+REPOSITORY       TAG       IMAGE ID       CREATED          SIZE
+jackson/centos   1.0       556edf4fffd4   25 minutes ago   231MB
+nginx            latest    fa5269854a5e   5 days ago       142MB
+mysql            5.7       82d2d47667cf   5 days ago       450MB
+centos           latest    5d0da3dc9764   7 months ago     231MB
+# 之前构建镜像的时候写了版本号，这里启动的时候记得加上版本号，否则就会去docker仓库中找最新的
+[root@VM-20-17-centos docker-test-volume]# docker run -it --name docker01 jackson/centos:1.0
 ```
+
+然后启动容器2，通过参数`--volumes-from`，设置容器2和容器1建立数据卷挂载关系
+
+```shell
+[root@VM-20-17-centos ~]# docker run -it --name docker02 --volumes-from docker01 jackson/centos:1.0
+# 可以看到，容器2与容器1建立挂载关系后，可以看到容器2也有volume01和volume02
+[root@d3fe059ecdb9 /]# ls -l
+total 56
+lrwxrwxrwx   1 root root    7 Nov  3  2020 bin -> usr/bin
+drwxr-xr-x   5 root root  360 Apr 26 01:50 dev
+drwxr-xr-x   1 root root 4096 Apr 26 01:50 etc
+drwxr-xr-x   2 root root 4096 Nov  3  2020 home
+lrwxrwxrwx   1 root root    7 Nov  3  2020 lib -> usr/lib
+lrwxrwxrwx   1 root root    9 Nov  3  2020 lib64 -> usr/lib64
+drwx------   2 root root 4096 Sep 15  2021 lost+found
+drwxr-xr-x   2 root root 4096 Nov  3  2020 media
+drwxr-xr-x   2 root root 4096 Nov  3  2020 mnt
+drwxr-xr-x   2 root root 4096 Nov  3  2020 opt
+dr-xr-xr-x 133 root root    0 Apr 26 01:50 proc
+dr-xr-x---   2 root root 4096 Sep 15  2021 root
+drwxr-xr-x  11 root root 4096 Sep 15  2021 run
+lrwxrwxrwx   1 root root    8 Nov  3  2020 sbin -> usr/sbin
+drwxr-xr-x   2 root root 4096 Nov  3  2020 srv
+dr-xr-xr-x  13 root root    0 Apr 26 01:50 sys
+drwxrwxrwt   7 root root 4096 Sep 15  2021 tmp
+drwxr-xr-x  12 root root 4096 Sep 15  2021 usr
+drwxr-xr-x  20 root root 4096 Sep 15  2021 var
+drwxr-xr-x   2 root root 4096 Apr 26 01:47 volume01
+drwxr-xr-x   2 root root 4096 Apr 26 01:47 volume02
+```
+
+
+
+首先在容器1中的volume01中添加文件
+
+```shell
+[root@VM-20-17-centos ~]# docker attach 494b049dd247
+[root@494b049dd247 /]# cd volume01
+[root@494b049dd247 volume01]# ls
+[root@494b049dd247 volume01]# touch docker01
+```
+
+然后就可以看到容器2的文件也会添加上
+
+```shell
+[root@d3fe059ecdb9 /]# cd volume01
+[root@d3fe059ecdb9 volume01]# ls
+docker01
+```
+
+反过来也是一样，在容器2的volume01中添加文件，容器1也会相应添加上
+
+```shell
+# 把容器3与容器1建立挂载，然后在容器3中建立新文件
+[root@VM-20-17-centos ~]# docker run -it --name docker03 --volumes-from docker01 jackson/centos:1.0
+[root@e5a6f37b1f9b /]# cd volume01
+[root@e5a6f37b1f9b volume01]# touch docker03
+# 容器1也有docker03这个文件
+[root@494b049dd247 volume01]# ls
+docker01  docker02  docker03
+# 容器2也有docker03这个文件
+[root@d3fe059ecdb9 volume01]# ls
+docker01  docker02  docker03
+```
+
+```shell
+# 把容器1删掉
+[root@VM-20-17-centos ~]# docker rm -f 494b049dd247
+494b049dd247
+# 容器2中的文件依旧在
+[root@d3fe059ecdb9 volume01]# ls
+docker01  docker02  docker03
+# 容器3中的文件依旧在
+[root@e5a6f37b1f9b volume01]# ls
+docker01  docker02  docker03
+```
+
+```shell
+ # 查看容器3和容器2的挂载目录，可以发现volume01挂载的都是主机中的同一个目录
+ 
+ [root@VM-20-17-centos _data]# docker inspect e5a6f37b1f9b   #查看容器3的挂载目录
+
+ "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "91d3af6b1c1d35b58661ce6d5a3dfed2a251391b24b608e8568bb8fad0c59471",
+                "Source": "/var/lib/docker/volumes/91d3af6b1c1d35b58661ce6d5a3dfed2a251391b24b608e8568bb8fad0c59471/_data",
+                "Destination": "volume01",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "volume",
+                "Name": "df748d8c94d65e44af403da44db9c4fbcdae4c55e34d5c3ce57d6a6a7eca994e",
+                "Source": "/var/lib/docker/volumes/df748d8c94d65e44af403da44db9c4fbcdae4c55e34d5c3ce57d6a6a7eca994e/_data",
+                "Destination": "volume02",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ],
+
+# 查看容器2的挂载目录
+[root@VM-20-17-centos _data]# docker inspect d3fe059ecdb9
+
+  "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "df748d8c94d65e44af403da44db9c4fbcdae4c55e34d5c3ce57d6a6a7eca994e",
+                "Source": "/var/lib/docker/volumes/df748d8c94d65e44af403da44db9c4fbcdae4c55e34d5c3ce57d6a6a7eca994e/_data",
+                "Destination": "volume02",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "volume",
+                "Name": "91d3af6b1c1d35b58661ce6d5a3dfed2a251391b24b608e8568bb8fad0c59471",
+                "Source": "/var/lib/docker/volumes/91d3af6b1c1d35b58661ce6d5a3dfed2a251391b24b608e8568bb8fad0c59471/_data",
+                "Destination": "volume01",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ],
+```
+
+下面同步两个MySQL的数据库和配置文件，与上面的操作相同，首先建立数据卷，然后给另一个MySQL容器建立容器数据卷挂载，两个mysql不要像狂神那样映射到主机的同一个端口，要映射两个不同的主机端口，否则会冲突。示例如下
+
+```shell
+[root@VM-20-17-centos _data]# docker run -d -p 6603:3306 -v /home/mysql/conf:/etc/mysql/conf.d -v /home/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name mysql01 mysql:5.7
+[root@VM-20-17-centos _data]# docker run -d -p 6604:3306 -e MYSQL_ROOT_PASSWORD=123456 --name mysql02 --volumes-from mysql01 mysql:5.7
+```
+
+小结：容器之间配置信息的传递，数据卷容器的生命周期一直持续到没有容器使用为止。但是一旦持久化到了本地，这个时候，本地的数据是不会删除的。
+
+
+
+### 4.3 Dockerfile介绍
+
+Dockerfile是用来构建Docker镜像的文本文件，也可以说是命令参数脚本。
+
+```shell
+docker build -f 文件路径 -t 镜像名 .  
+# 文件名为Dockerfile时可省略且最后的.不要忽略
+#  -f 标志指向文件系统中任何位置的Dockerfile
+
+docker run     # 运行镜像
+docker push    # 发布镜像到DockerHub、阿里云镜像仓库
+```
+
+
+
+### 4.4 Dockerfile构建过程
+
+镜像结构图：
+
+<img src="images/image-20221207171335584.png" alt="image-20221207171335584" style="zoom:67%;" />
+
+编写一个dockerfile文件，随后运行命令：
 
 ```shell
 [root@iZ1608aqb7ntn9Z 20210806]# vim Dockerfile 
@@ -209,34 +771,349 @@ Hello Dockerfile
 
 
 
-### 3.2 Dockerfile命令
+### 4.5 Dockerfile命令
 
-|      命令      |                             效果                             |
-| :------------: | :----------------------------------------------------------: |
-|      FROM      |                   基础镜像：Centos/Ubuntu                    |
-|   MAINTAINER   |                        镜像作者+邮箱                         |
-|      RUN       |                   镜像构建时需要运行的命令                   |
-|      ADD       |                   为镜像添加内容（压缩包）                   |
-|    WORKDIR     |               镜像工作目录（进入容器时的目录）               |
-|     VOLUME     |                          挂载的目录                          |
-|     EXPOSE     |                         暴露端口配置                         |
-| CMD/ENTRYPOINT | 指定这个容器启动时要运行的命令（CMD替代先前命令，ENTRYPOINT在先前命令后追加） |
-|      COPY      |                类似于ADD，将文件拷贝到镜像中                 |
-|      ENV       |                      构建时设置环境变量                      |
+|    命令    |                             效果                             |
+| :--------: | :----------------------------------------------------------: |
+|    FROM    |                   基础镜像：Centos/Ubuntu                    |
+| MAINTAINER |                        镜像作者+邮箱                         |
+|    RUN     |                   镜像构建时需要运行的命令                   |
+|    ADD     | 将本地文件添加到容器中，tar类型文件会自动解压(网络压缩资源不会被解压)，可以访问网络资源，类似wget |
+|  WORKDIR   |               镜像工作目录（进入容器时的目录）               |
+|   VOLUME   |                          挂载的目录                          |
+|   EXPOSE   |                         暴露端口配置                         |
+|    CMD     | 指定这个容器启动的时候要运行的命令**（只有最后一个会生效，可被替代）** |
+| ENTRYPOINT |       指定这个容器启动的时候要运行的命令，可以追加命令       |
+|  ONBUILD   | 当构建一个被继承DockerFile，这个时候就会运行ONBUILD的指令，触发指令 |
+|    COPY    |   功能类似ADD，但是是不会自动解压文件，也不能访问网络资源    |
+|    ENV     |                      构建时设置环境变量                      |
 
-
-
-### 3.3 构建过程
+关于DockerFile文件的脚本注意点有：
 
 * 每个保留关键字（指令）都必须是大写字母
-
 * 从上往下顺序执行
-
 * "#"表示注释
-
 * 每一个指令都会创建提交一个新的镜像层并提交
 
-  
+关于Dockerfile指令的详细语法解释：[Dockerfile文件详解](https://www.cnblogs.com/panwenbin-logs/p/8007348.html)
+Dockerfile指令介绍的官方文档：https://docs.docker.com/engine/reference/builder/
+
+
+
+### 4.6 制作镜像
+
+**制作centos镜像**
+
+```dockerfile
+# 编写配置文件 mydockerfile-centos
+FROM centos
+MAINTAINER ethan<1258398543@qq.com>
+
+ENV MYPATH /usr/local
+WORKDIR $MYPATH
+
+RUN yum -y install vim
+RUN yum -y install net-tools
+
+EXPOSE 80
+
+CMD echo $MYPATH
+CMD echo "---end---"
+CMD /bin/bash
+```
+
+逐行解释Dockerfile文件指令：
+
+* FROM centos：该image文件继承官方的centos，后面加冒号如centos:7，用于指定镜像的版本
+* ENV MYPATH /usr/local：设置环境变量MYPATH
+* WORKDIR $MYPATH：直接使用上面设置的环境变量，指定/usr/local为工作目录
+* RUN yum -y install vim：在/usr/local目录下，运行yum -y install vim命令安装工具，注意安装后所有依赖和工具都会打包到image文件中
+* EXPOSE 80：将容器80端口暴露出来，允许外部连接端口
+* CMD：指定容器启动的时候运行命令
+
+通过这个dockerfile构建镜像，构建镜像命令：
+
+```shell
+docker build -f dockerfile文件路径 -t 镜像名[:版本号] . #（这里有个小点.）
+```
+
+上面命令中，-t参数用来指定image文件的名字，后面还可以用冒号指定标签。如果不指定，默认标签就是latest。**最后那个点表示Dockerfile文件所在路径上，上例是当前路径，所以是一个点。**
+
+```shell
+# 2、通过这个文件构建镜像
+docker build -f mydockerfile-centos -t mycentos:0.1 .
+```
+
+```shell
+# docker history 镜像id  ，来查看某个镜像的构建过程
+[root@VM-20-17-centos ~]# docker history 57e9eb8b444b
+IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
+57e9eb8b444b   9 minutes ago   /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "/bin…   0B        
+6cffa0f5104b   9 minutes ago   /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "echo…   0B        
+31e18cb4b83e   9 minutes ago   /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "echo…   0B        
+d3df5b1d3108   9 minutes ago   /bin/sh -c #(nop)  EXPOSE 80                    0B        
+09063d4813a7   9 minutes ago   /bin/sh -c yum -y install net-tools             166MB     
+aa793ff00e9a   9 minutes ago   /bin/sh -c yum -y install vim                   221MB     
+4fa5a8baba8e   9 minutes ago   /bin/sh -c #(nop) WORKDIR /usr/local            0B        
+ac68d7db82d8   9 minutes ago   /bin/sh -c #(nop)  ENV MYPATH=/usr/local        0B        
+5778f439503c   9 minutes ago   /bin/sh -c #(nop)  MAINTAINER Kay<2041290842…   0B        
+eeb6ee3f44bd   7 months ago    /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      7 months ago    /bin/sh -c #(nop)  LABEL org.label-schema.sc…   0B        
+<missing>      7 months ago    /bin/sh -c #(nop) ADD file:b3ebbe8bd304723d4…   204MB   
+```
+
+**RUN和CMD和ENTRYPOINT的区别**
+
+**RUN命令和CMD命令区别：**
+
+RUN命令在image文件的构建阶段执行，执行结果都会打包进入image文件；CMD命令则是在容器启动后执行。
+
+另外一个Dockerfile可以包含多个RUN命令，但是只能有一个CMD命令
+
+注意指定了CMD命令后，docker container run命令就不能附加命令了，比如前面的/bin/bash，否则会覆盖CMD命令
+
+**CMD和ENTRYPOINT的区别：**
+
+* CMD：指定容器启动的时候要运行的命令，只有最后一个会生效
+* ENTRYPOINT：指定容器启动的时候要运行的命令，命令可以追加
+
+
+
+CMD命令测试：
+
+```shell
+[root@VM-20-17-centos dockerfile]# vim dockerfile-cmd-test
+[root@VM-20-17-centos dockerfile]# cat dockerfile-cmd-test 
+FROM centos
+CMD ["ls","-a"]
+
+[root@VM-20-17-centos dockerfile]# docker build -f dockerfile-cmd-test -t cmdtest:1.0 .
+Sending build context to Docker daemon  3.072kB
+Step 1/2 : FROM centos
+ ---> 5d0da3dc9764
+Step 2/2 : CMD ["ls","-a"]
+ ---> Running in 4023b35004c1
+Removing intermediate container 4023b35004c1
+ ---> 19977d0ee131
+Successfully built 19977d0ee131
+Successfully tagged cmdtest:1.0
+
+
+[root@VM-20-17-centos dockerfile]# docker run 19977d0ee131
+.
+..
+.dockerenv
+bin
+dev
+etc
+home
+lib
+lib64
+lost+found
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+
+# 想追加命令 -l，但是CMD不给，会报错 ，因为-l不是一个完整的命令 ，应该是ls -l
+[root@VM-20-17-centos dockerfile]# docker run 19977d0ee131 -l
+docker: Error response from daemon: failed to create shim: OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "-l": executable file not found in $PATH: unknown.
+ERRO[0000] error waiting for container: context canceled 
+
+
+# 想追加命令 ls -l ，可以发现它直接把原先的ls -a替换掉了，而不是追加上去的
+[root@VM-20-17-centos dockerfile]# docker run 19977d0ee131  ls -l
+total 48
+lrwxrwxrwx   1 root root    7 Nov  3  2020 bin -> usr/bin
+drwxr-xr-x   5 root root  340 Apr 26 08:00 dev
+drwxr-xr-x   1 root root 4096 Apr 26 08:00 etc
+drwxr-xr-x   2 root root 4096 Nov  3  2020 home
+lrwxrwxrwx   1 root root    7 Nov  3  2020 lib -> usr/lib
+lrwxrwxrwx   1 root root    9 Nov  3  2020 lib64 -> usr/lib64
+drwx------   2 root root 4096 Sep 15  2021 lost+found
+drwxr-xr-x   2 root root 4096 Nov  3  2020 media
+drwxr-xr-x   2 root root 4096 Nov  3  2020 mnt
+drwxr-xr-x   2 root root 4096 Nov  3  2020 opt
+dr-xr-xr-x 117 root root    0 Apr 26 08:00 proc
+dr-xr-x---   2 root root 4096 Sep 15  2021 root
+drwxr-xr-x  11 root root 4096 Sep 15  2021 run
+lrwxrwxrwx   1 root root    8 Nov  3  2020 sbin -> usr/sbin
+drwxr-xr-x   2 root root 4096 Nov  3  2020 srv
+dr-xr-xr-x  13 root root    0 Apr 26 01:51 sys
+drwxrwxrwt   7 root root 4096 Sep 15  2021 tmp
+drwxr-xr-x  12 root root 4096 Sep 15  2021 usr
+drwxr-xr-x  20 root root 4096 Sep 15  2021 var
+```
+
+
+
+ENTRYPOINT测试：
+
+```shell
+[root@VM-20-17-centos dockerfile]# cat dockerfile-cmd-entrypoint 
+FROM centos
+ENTRYPOINT ["ls","-a"]
+
+[root@VM-20-17-centos dockerfile]# docker build -f dockerfile-cmd-entrypoint  -t myentrypoint:1.0 .
+Sending build context to Docker daemon  4.096kB
+Step 1/2 : FROM centos
+ ---> 5d0da3dc9764
+Step 2/2 : ENTRYPOINT ["ls","-a"]
+ ---> Running in 42bb03a59bce
+Removing intermediate container 42bb03a59bce
+ ---> 4b498a87db2f
+Successfully built 4b498a87db2f
+Successfully tagged myentrypoint:1.0
+
+[root@VM-20-17-centos dockerfile]# docker run 4b498a87db2f
+.
+..
+.dockerenv
+bin
+dev
+etc
+home
+lib
+lib64
+lost+found
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+# 可以发现，是可以直接追加命令的，而不需要完整的命令
+[root@VM-20-17-centos dockerfile]# docker run 4b498a87db2f  -l
+total 56
+drwxr-xr-x   1 root root 4096 Apr 26 08:05 .
+drwxr-xr-x   1 root root 4096 Apr 26 08:05 ..
+-rwxr-xr-x   1 root root    0 Apr 26 08:05 .dockerenv
+lrwxrwxrwx   1 root root    7 Nov  3  2020 bin -> usr/bin
+drwxr-xr-x   5 root root  340 Apr 26 08:05 dev
+drwxr-xr-x   1 root root 4096 Apr 26 08:05 etc
+drwxr-xr-x   2 root root 4096 Nov  3  2020 home
+lrwxrwxrwx   1 root root    7 Nov  3  2020 lib -> usr/lib
+lrwxrwxrwx   1 root root    9 Nov  3  2020 lib64 -> usr/lib64
+drwx------   2 root root 4096 Sep 15  2021 lost+found
+drwxr-xr-x   2 root root 4096 Nov  3  2020 media
+drwxr-xr-x   2 root root 4096 Nov  3  2020 mnt
+drwxr-xr-x   2 root root 4096 Nov  3  2020 opt
+dr-xr-xr-x 115 root root    0 Apr 26 08:05 proc
+dr-xr-x---   2 root root 4096 Sep 15  2021 root
+drwxr-xr-x  11 root root 4096 Sep 15  2021 run
+lrwxrwxrwx   1 root root    8 Nov  3  2020 sbin -> usr/sbin
+drwxr-xr-x   2 root root 4096 Nov  3  2020 srv
+dr-xr-xr-x  13 root root    0 Apr 26 01:51 sys
+drwxrwxrwt   7 root root 4096 Sep 15  2021 tmp
+drwxr-xr-x  12 root root 4096 Sep 15  2021 usr
+drwxr-xr-x  20 root root 4096 Sep 15  2021 var
+```
+
+
+
+**制作tomcat镜像**
+
+1. 制作Tomcat镜像
+
+   ```shell
+   [t@VM-20-17-centos home]# cd mybuild/
+   [root@VM-20-17-centos mybuild]# touch readme.txt
+   [root@VM-20-17-centos mybuild]# ls
+   apache-tomcat-8.5.40.tar.gz  jdk-8u192-linux-x64.tar.gz  readme.txt
+   [root@VM-20-17-centos mybuild]# 
+   ```
+
+2. 编写dockerfile文件，文件名使用官方命名Dockerfile，build的时候会默认寻找当前目录下的文件，不需要使用-f参数指定
+
+   ```shell
+   [root@iZwz99sm8v95sckz8bd2c4Z tomcat]# vim Dockerfile
+   [root@iZwz99sm8v95sckz8bd2c4Z tomcat]# cat Dockerfile
+   FROM centos
+   MAINTAINER ethan<1258398543@qq.com>
+   
+   COPY readme.txt /usr/local/readme.txt
+   
+   ADD jdk-8u251-linux-x64.tar.gz /usr/local/
+   ADD apache-tomcat-8.5.55.tar.gz /usr/local/
+   
+   RUN yum -y install vim
+   
+   ENV MYPATH /usr/local
+   WORKDIR $MYPATH
+   
+   ENV JAVA_HOME /usr/local/jdk1.8.0_251
+   ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+   ENV CATALINA_HOME /usr/local/apache-tomcat-8.5.55
+   ENV CATALINA_BASH /usr/local/apache-tomcat-8.5.55
+   ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/lib:$CATALINA_HOME/bin
+   
+   EXPOSE 8080
+   
+   CMD /usr/local/apache-tomcat-8.5.55/bin/startup.sh && tail -F /usr/local/apache-tomcat-8.5.55/bin/logs/catalina.out
+   ```
+
+3. 使用该Dockerfile构建镜像
+
+   ```shell
+   [root@VM-20-17-centos tomcat]# docker build -t diytomcat .
+   # 查看镜像
+   [root@VM-20-17-centos tomcat]# docker images
+   REPOSITORY       TAG       IMAGE ID       CREATED             SIZE
+   diytomcat        latest    35bd17b5d64f   3 minutes ago       835MB
+   ```
+
+4. 启动生成的镜像，构建Tomcat容器
+
+   这里设置了数据卷，宿主机的/home/dockerfile/tomcat/test对应该容器的/usr/local/apache-tomcat-8.5.40/webapps/test。这样关于test项目的修复只需要在宿主机上修改就可以了，不需要进入到容器中修改。
+
+   ```shell
+   [root@VM-20-17-centos test]# docker run -d -p 8091:8080 --name diytomcat04 -v /home/mybuild/tomcat/test:/usr/local/apache-tomcat-8.5.40/webapps/test diytomcat
+   b709d703dd5ac5dc00fba6aad9565618c835f965c6ff7ab2000fba1e4c824c55
+   ```
+
+5. 在/home/dockerfile/tomcat/test的目录下，新建index.html 测试Tomcat是否能正常使用
+
+   因为设置了卷挂载所以可以直接在宿主机中进行操作
+
+   ```html
+   <!DOCTYPE html>
+   <html>
+       <head>
+            <meta charset="UTF-8"/>
+           <title>这是个标题</title>
+       </head>
+       <body>
+           <h1>这是一个一个简单的HTML</h1>
+           <p>Hello World！</p>
+       </body>
+   </html>
+   ```
+
+6. 访问测试，浏览器访问查看是否能正常访问
+
+
+
+
+
+
+
+
+
+
 
 ### 3.4 构建实例（jdk+tomcat）
 
@@ -367,4 +1244,44 @@ docker  network create --driver 网络模式 --subnet 子网ip --gateway 网关 
 ![image-20221206180138842](images/image-20221206180138842.png)
 
 我们不仅在**docker network ls**命令下发现这个新创建的网络network，还可以使用**docker network inspect**命令查看其详细信息，包括我们创建时定义的子网ip和网关
+
+![image-20221207110207245](images/image-20221207110207245.png)
+
+只要两个容器启动时都通过-net，选用了同一个已创建的网络，不同容器间即可通过ip地址或容器名/id连通：
+
+![image-20221207110337133](images/image-20221207110337133.png)
+
+
+
+### 4.4 网络连通
+
+![image-20221207110406618](images/image-20221207110406618.png)
+
+
+
+## 5、SpringBoot项目打包Docker镜像
+
+### 5.1 构建SpringBoot项目
+
+### 5.2 打包运行
+
+### 5.3 编写Dockerfile
+
+```dockerfile
+FROM java:8
+COPY *.jar /app.jar
+CMD ["--server.port=8080"]
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","app.jar"]
+```
+
+### 5.4 构建镜像
+
+```shell
+# 1.复制jar和DockerFIle到服务器
+# 2.构建镜像
+$ docker build -t xxxxx:xx  .
+```
+
+### 5.5 发布运行
 
