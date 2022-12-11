@@ -802,7 +802,7 @@ Dockerfile指令介绍的官方文档：https://docs.docker.com/engine/reference
 
 ### 4.6 制作镜像
 
-**制作centos镜像**
+#### 4.6.1 制作centos镜像
 
 ```dockerfile
 # 编写配置文件 mydockerfile-centos
@@ -1025,7 +1025,7 @@ drwxr-xr-x  20 root root 4096 Sep 15  2021 var
 
 
 
-**制作tomcat镜像**
+#### 4.6.2 制作tomcat镜像
 
 1. 制作Tomcat镜像
 
@@ -1107,101 +1107,291 @@ drwxr-xr-x  20 root root 4096 Sep 15  2021 var
 
 
 
+#### 4.6.3 发布镜像到DockerHub
+
+1. 登录https://hub.docker.com/ DockerHub官网进行注册
+
+2. 进行登录
+
+   ```shell
+   docker login -u 用户名
+   ```
+
+   ```shell
+   [root@VM-20-17-centos ~]# docker login -u kownzird
+   Password: 
+   WARNING! Your password will be stored unencrypted in /root/.docker/config.json.
+   Configure a credential helper to remove this warning. See
+   https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+   
+   Login Succeeded
+   ```
+
+3. 使用`docker push`命令推送镜像到DockerHub上的仓库
+
+   ```shell
+   [root@VM-20-17-centos ~]# docker tag 35bd17b5d64f kownzird/diytomcat:1.0
+   [root@VM-20-17-centos ~]# docker images
+   REPOSITORY             TAG       IMAGE ID       CREATED        SIZE
+   jacksonkkk/diytomcat   1.0       35bd17b5d64f   3 hours ago    835MB
+   diytomcat              latest    35bd17b5d64f   3 hours ago    835MB
+   myentrypoint           1.0       4b498a87db2f   4 hours ago    231MB
+   cmdtest                1.0       19977d0ee131   4 hours ago    231MB
+   mycentos01             0.1       57e9eb8b444b   4 hours ago    591MB
+   <none>                 <none>    6d621234391f   4 hours ago    231MB
+   <none>                 <none>    84c810a6fabf   4 hours ago    231MB
+   jackson/centos         1.0       556edf4fffd4   11 hours ago   231MB
+   nginx                  latest    fa5269854a5e   6 days ago     142MB
+   mysql                  5.7       82d2d47667cf   6 days ago     450MB
+   centos                 7         eeb6ee3f44bd   7 months ago   204MB
+   centos                 latest    5d0da3dc9764   7 months ago   231MB
+   [root@VM-20-17-centos ~]# docker push kownzird/diytomcat:1.0
+   ```
+
+   因为push的时候，镜像名前面需要加上用户名(kownzird为用户名，如果用户名不是当前登录用户则会拒绝push请求)，所以需要使用命令复制出一份镜像重新打个tag
+
+   ```shell
+   docker tag 镜像名 新的镜像名
+   ```
 
 
 
+#### 4.6.4 发布镜像到阿里云容器服务
+
+1. 登录阿里云，找到容器镜像服务
+
+2. 创建个人实例
+
+   ![image-20221208093839123](images/image-20221208093839123.png)
+
+3. 创建命名空间
+
+4. 创建镜像仓库
+
+5. 命令行登录阿里云docker仓库
+
+6. 把镜像push到阿里云上
+
+   ```shell
+   docker tag 镜像id registry.cn-shenzhen.aliyuncs.com/命名空间/阿里云docker仓库名称:版本号
+   docker push registry.cn-shenzhen.aliyuncs.com/命名空间/阿里云docker仓库名称:版本号
+   ```
+
+小结：
+
+![image-20221208094011704](images/image-20221208094011704.png)
 
 
 
+## 5、Docker网络
 
+### 5.1 理解Docker
 
-### 3.4 构建实例（jdk+tomcat）
+通过命令**ip addr**查看本地ip地址，我们发现除了本机回环地址和埃里远的内网地址外，还多了一个网卡：Docker0，这是Docker服务启动后自动生成的
+
+![image-20221208094216311](images/image-20221208094216311.png)
 
 ```shell
-[root@iZ1608aqb7ntn9Z 20210806]# vim DockerFile2
-# -----------写入文件--------------
 
-FROM centos
-  
-COPY ymx /opt/Docker/20210806/ymx
+[root@VM-20-17-centos ~]# docker run -d -P --name tomcat01 tomcat
+root@8db5d786b47a:/usr/local/tomcat# apt update && apt install -y iproute2
 
-ADD jdk8.tar.gz /usr/local
-ADD tomcat.tar.gz /usr/local
+#查看容器的内部网络地址  ip addr
+[root@VM-20-17-centos ~]# docker exec -it tomcat01 ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+74: eth0@if75: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+       
+# Linux主机可以ping通容器内部       
+[root@VM-20-17-centos ~]# ping 172.17.0.2
+PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
+64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.051 ms
+64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.056 ms
+64 bytes from 172.17.0.2: icmp_seq=3 ttl=64 time=0.060 ms
+64 bytes from 172.17.0.2: icmp_seq=4 ttl=64 time=0.052 ms
+```
 
-RUN yum -y install vim
+每启动一个docker容器，docker就会给docker容器分配一个ip，Linux下只要安装了docker，就会有一个网卡docker0
 
-ENV MYPATH /usr/local
-WORKDIR $MYPATH
+桥接模式，使用的技术是veth-pair技术
 
-ENV JAVA_HOME /usr/local/jdk1.8.0_141
-ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
-ENV PATH $PATH:$JAVA_HOME/bin
+再次输入命令ip addr，发现多了一个网卡
 
-EXPOSE 8080
+![image-20221208100028939](images/image-20221208100028939.png)
 
-# -----------写入文件完成--------------
-[root@iZ1608aqb7ntn9Z 20210806]# ls
-Dockerfile  DockerFile2  ymx
-[root@iZ1608aqb7ntn9Z 20210806]# cp /tmp/jdk8.tar.gz jdk8.tar.gz
-[root@iZ1608aqb7ntn9Z 20210806]# cp /tmp/tomcat.tar.gz tomcat.tar.gz
-[root@iZ1608aqb7ntn9Z 20210806]# ls
-Dockerfile  DockerFile2  jdk8.tar.gz  tomcat.tar.gz  ymx
-[root@iZ1608aqb7ntn9Z 20210806]# docker build -f ./DockerFile2 -t mytomcat9 . 
-Sending build context to Docker daemon    197MB
-Step 1/11 : FROM centos
-......
-Successfully built 86a9a8dd939a
-Successfully tagged mytomcat9:latest
-[root@iZ1608aqb7ntn9Z 20210806]# docker images
-REPOSITORY            TAG       IMAGE ID       CREATED             SIZE
-mytomcat9             latest    86a9a8dd939a   26 seconds ago      667MB
-......
-[root@iZ1608aqb7ntn9Z 20210806]# docker run -it mytomcat9 /bin/bash
-[root@ed5fd71834e2 local]# ls
-apache-tomcat-9.0.44  bin  etc  games  include  jdk1.8.0_141  lib  lib64  libexec  sbin  share  src
-[root@ed5fd71834e2 local]# java -version
-java version "1.8.0_141"
-Java(TM) SE Runtime Environment (build 1.8.0_141-b15)
-Java HotSpot(TM) 64-Bit Server VM (build 25.141-b15, mixed mode)
+```shell
+# 可以发现启动的容器所带来的网卡，是一对一对的。（容器删除，对应的网卡也会自动删除）
+# evth-pair 就是一对虚拟设备接口，他们都是成对出现的，一端连着协议，一端彼此相连
+# 正因为这个特性，veth-pair 充当一个桥梁，连接各种虚拟网络设备
+# OpenStac 、 Docker容器之间的连接、OVS的连接，都是使用veth-pair技术
+```
+
+测试tomcat02是否能ping通tomcat01
+
+```shell
+docker exec -it tomcat02 ping 172.17.0.2
+```
+
+![image-20221208100619175](images/image-20221208100619175.png)
+
+结论：tomcat01和tomcat02是共用一个路由器  --  docker0
+
+所有容器不指定网络的情况下，都是docker0路由的，docker会给我们的容器分配一个默认的可用ip
+
+Docker使用的是Linux中的桥接，宿主机是一个Docker容器的网桥 -- docker0
+
+Docker中所有的网络接口都是虚拟的（虚拟的转发效率高）
+
+![image-20221208100851928](images/image-20221208100851928.png)
+
+扩展文章：<https://blog.csdn.net/huangjhai/article/details/120425457>
+
+
+
+### 5.2 Docker默认的网络模式
+
+使用以下命令查看所有的Docker网络
+
+```shell
+docker network ls
+```
+
+![image-20221208164852394](images/image-20221208164852394.png)
+
+Docker默认提供了四个网络模式
+
+1. bridge：容器默认的网络是桥接模式（自己搭建的网络默认也是使用桥接模式，启动容器默认也是使用桥接模式）。此模式会为每一个容器分配、设置ip等，并将容器连接到一个docker0虚拟网桥，通过docker0网桥以及Iptables net表配置与宿主机通信
+2. none：不配置网络，容器有独立的Network namespace，但没有对其进行任何网络设置，如分配veth pair和网桥连接，配置ip等
+3. host：容器和宿主机共享Network namespace，容器将不会虚拟出自己的网卡，配置自己的ip等，而是使用宿主机的ip和端口
+4. cointainer：创建的容器不会创建自己的网卡，配置自己的ip容器网络连通。容器和另外一个容器共享Network namespace（共享Ip、端口范围）
+
+容器默认使用bridge网路模式，我们使用该docker run --network=选项指定容器使用的网络：
+
+host模式： --net=host
+
+none模式：--net=none
+
+bridge模式：--net=bridge，默认设置
+
+container模式：--net=container:NAME_or_ID
+
+#### 5.2.1 host模式
+
+Namespace的简要说明：
+Docker使用了Linux的Namespaces技术来进行资源隔离，如PID Namespace隔离进程，Mount Namespace隔离文件系统，Network Namespace隔离网络等。
+
+一个Network Namespace提供了一份独立的网络环境，包括网卡、路由、Iptable规则等都与其他的NetworkNamespace隔离。一个Docker容器一般会分配一个独立的Network Namespace。
+
+如果启动容器的时候使用host模式，那么这个容器将不会获得一个独立的Network Namespace，而是和宿主机共用一个Network Namespace。容器将不会虚拟出自己的网卡，配置自己的IP等，而是使用宿主机的IP和端口。但是，容器的其他方面，如文件系统、进程列表等还是和宿主机隔离的。
+
+使用host模式的容器可以直接使用宿主机的IP地址与外界通信，容器内部的服务端口也可以使用宿主机的端口，不需要进行NAT，host最大的优势就是网络性能比较好，但是docker host上已经使用的端口就不能再用了，网络的隔离性不好。Host模式的模型图，如下图所示：
+<img src="images/image-20221209113936053.png" alt="image-20221209113936053" style="zoom:67%;" />
+
+备注：eth0是10.126.130.4为宿主机的内网地址
+
+
+
+#### 5.2.2 container模式
+
+这个模式指定新创建的容器和已经存在的一个容器共享一个 Network Namespace，而不是和宿主机共享。新创建的容器不会创建自己的网卡，配置自己的 IP，而是和一个指定的容器共享 IP、端口范围等。同样，两个容器除了网络方面，其他的如文件系统、进程列表等还是隔离的。两个容器的进程可以通过 lo 网卡设备通信。Container模式模型示意图如下：
+
+<img src="images/image-20221209115301467.png" alt="image-20221209115301467" style="zoom: 67%;" />
+
+
+
+#### 5.2.3 none模式
+
+使用none模式，Docker容器拥有自己的Network Namespace，但是，并不为Docker容器进行任何网络配置。也就是说，这个Docker容器没有网卡、IP、路由等信息。需要我们自己为Docker容器添加网卡、配置IP等。
+
+这种网络模式下容器只有lo回环网络，没有其他网卡。none模式可以在容器创建时通过–network=none来指定。这种类型的网络没有办法联网，封闭的网络能很好的保证容器的安全性。
+
+None模式示意图:
+
+<img src="images/image-20221209115439087.png" alt="image-20221209115439087" style="zoom:67%;" />
+
+
+
+#### 5.2.4 bridge模式
+
+当Docker进程启动时，会在主机上创建一个名为docker0的虚拟网桥，此主机上启动的Docker容器会连接到这个虚拟网桥上。虚拟网桥的工作方式和物理交换机类似，这样主机上的所有容器就通过交换机连在了一个二层网络中。
+
+从docker0子网中分配一个IP给容器使用，并设置docker0的IP地址为容器的默认网关。在主机上创建一对虚拟网卡veth pair设备，Docker将veth pair设备的一端放在新创建的容器中，并命名为eth0（容器的网卡），另一端放在主机中，以vethxxx这样类似的名字命名，并将这个网络设备加入到docker0网桥中。可以通过brctl show命令查看。
+
+bridge模式是docker的默认网络模式，不写–net参数，就是bridge模式。使用docker run -p时，docker实际是在iptables做了DNAT规则，实现端口转发功能。可以使用iptables -t nat -vnL查看。bridge模式如下图所示：
+
+<img src="images/image-20221209115708388.png" alt="image-20221209115708388" style="zoom:67%;" />
+
+当Docker server启动时，会在主机上创建一个名为docker0的虚拟网桥，此主机上启动的Docker容器会连接到这个虚拟网桥上。Docker0使用到的技术是evth-pair技术。在默认bridge网络模式下，我们每启动一个Docker容器，Docker就会给Docker容器配置一个ip。
+
+Docker容器完成bridge网络配置的过程如下：
+
+1. 在主机上创建一对虚拟卡veth pair设备，veth设备总是成对出现，它们组成了一个数据的通道，数据从一个设备进入，就会从另一个设备出来。因此，veth设备常用来连接两个网络设备
+
+2. Docker将veth pair设备的一端放在新创建的容器中，并命名为eth0。另一端放在主机中，以veth65f9这样类似的名字命名，并将这个网络设备加入到docker0网桥中。
+
+3. 从docker0子网中分配一个IP给容器使用，并设置docker0的IP地址为容器的默认网关
+
+   
+
+### 5.3    --link
+
+（--link现在已经不推荐使用，了解即可）
+
+> 在微服务部署的场景下，注册中心是使用服务名来唯一识别微服务的，而我们上线部署的时候微服务对应的IP地址可能会改动，所以我们需要使用容器名来配置容器间的网络连接。使用–link可以完成这个功能。
+
+ping如果是报错的OCI的，记得先进容器内部执行，之所以会报错是因为这里的tomcat没有ping这个命令，需要先安装
+
+```shell
+apt update && apt install -y net-tools
+```
+
+```shell
+# 通过--link让容器之间互相ping通
+docker run -d -P --name tomcat03 --link tomcat02 tomcat
+docker exec -it tomcat03 /bin/bash   # 进入容器内部
+
+apt update && apt install -y net-tools  # 安装ping命令所依赖的包
+apt-get update
+apt install iputils-ping
+
+apt update && apt install -y iproute2  # 安装ip addr命令依赖的包 
+
+# docker exec -it tomcat03 ping tomcat02
+[root@VM-20-17-centos ~]# docker exec -it tomcat03 ping tomcat02
+PING tomcat02 (172.17.0.3) 56(84) bytes of data.
+64 bytes from tomcat02 (172.17.0.3): icmp_seq=1 ttl=64 time=0.097 ms
+64 bytes from tomcat02 (172.17.0.3): icmp_seq=2 ttl=64 time=0.074 ms
+64 bytes from tomcat02 (172.17.0.3): icmp_seq=3 ttl=64 time=0.051 ms
+
+# 反向ping，发现ping不通
+# docker exec -it tomcat02 ping tomcat03
+[root@VM-20-17-centos ~]# docker exec -it tomcat02 ping tomcat03
+ping: tomcat03: Name or service not known
+
+[root@VM-20-17-centos ~]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+09fb7082262f   bridge    bridge    local
+3571c95cd476   host      host      local
+f43080225231   none      null      local
+
+# docker network  inspect 桥接网络id
+[root@VM-20-17-centos ~]# docker network inspect 09fb7082262f
 ```
 
 
 
-## 4、Docker网络
-
-### 4.1 理解Docker
-
-通过命令**ip addr**查看本地ip地址，我们发现除了本机回环地址和埃里远的内网地址外，还多了一个网卡：Docker0，这是Docker服务启动后自动生成的
-
-![image-20221206150044645](images/image-20221206150044645.png)
-
-而如果进入一个正在后台运行的tomcat容器，同样使用**ip addr**命令，发现容器得到了一个新的网络：**12: eth@if13**，ip地址：**172.17.0.2**。这是Docker在容器启动时为其分配的
-
-![image-20221206150115419](images/image-20221206150115419.png)
-
-思考一个问题：此时我们的linux主机可以ping通容器内部（**172.17.0.2**）吗？（**注意与容器暴露端口相区分**）
-
-![image-20221206150130033](images/image-20221206150130033.png)
-
-* linux可以ping通docker容器内部，因为docker0的地址为172.17.0.1，容器为172.17.0.2
-
-* 原理：我们每启动一个docker容器，docker就会给容器分配一个默认的可用ip，我们只要安装了docker，就会有一个网卡docker0(bridge)。网卡采用桥接模式，并使用veth-pair技术（veth-pair就是一堆虚拟设备接口，成对出现，一段连着协议，一段彼此相连，充当一个桥梁。）
-
-* 这时我们退出容器，回到主机再次观察主机的ip地址：
-
-  ![image-20221206150740883](images/image-20221206150740883.png)
-
-* 我们惊奇地发现了一个新网络**13: vethda1df4b@if12**，对应容器内网络地址的**12: eth@if13**
-
-* 容器和容器之间是可以互相ping通的：容器1→Docker0→容器2
-
-  ![image-20221206150825241](images/image-20221206150825241.png)
-
-* docker中的所有网络接口都是虚拟的 ，转发效率高。删除容器后，对应的网桥也随之删除
 
 
 
-### 4.2    --link
+
+
+
+
 
 若编写一个微服务并连接数据库，如果数据库ip改变，如何根据容器名而不是ip访问容器？显然直接使用容器名是无法ping通容器内部的
 
