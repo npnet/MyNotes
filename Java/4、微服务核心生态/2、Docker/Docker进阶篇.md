@@ -1383,47 +1383,41 @@ f43080225231   none      null      local
 [root@VM-20-17-centos ~]# docker network inspect 09fb7082262f
 ```
 
+![image-20221211121813637](images/image-20221211121813637.png)
 
-
-
-
-
-
-
-
-
-
-若编写一个微服务并连接数据库，如果数据库ip改变，如何根据容器名而不是ip访问容器？显然直接使用容器名是无法ping通容器内部的
-
-![image-20221206175001297](images/image-20221206175001297.png)
-
-这时我们可以在容器启动命令中加入一个选项：**--link**，使得我们可以根据容器名来访问容器
+--link的原理：就是在外面的hosts配置中增加了一个 172.17.0.3 tomcat02 a3f54784bc41 映射
 
 ```shell
-docker run -d -P --link 容器名/id 镜像名/id
+[root@VM-20-17-centos ~]# docker exec -it tomcat03 cat /etc/hosts
+127.0.0.1	localhost
+::1	localhost ip6-localhost ip6-loopback
+fe00::0	ip6-localnet
+ff00::0	ip6-mcastprefix
+ff02::1	ip6-allnodes
+ff02::2	ip6-allrouters
+172.17.0.3	tomcat02 a3f54784bc41  #tomcat03 可以ping 通tomcat02的原因，因为配置文件写好了，只要请求tomcat02，直接就转发到172.17.0.3
+172.17.0.4	7450b8509942
+
+# 发现02的没有配置03的
+[root@VM-20-17-centos ~]# docker exec -it tomcat02 cat /etc/hosts
+127.0.0.1	localhost
+::1	localhost ip6-localhost ip6-loopback
+fe00::0	ip6-localnet
+ff00::0	ip6-mcastprefix
+ff02::1	ip6-allnodes
+ff02::2	ip6-allrouters
+172.17.0.3	a3f54784bc41
 ```
 
-![image-20221206175145605](images/image-20221206175145605.png)
-
-然而反向就不可以ping通，这是因为--link的本质是把需要连接的容器名/id写入启动容器的配置文件中，即增加了一个ip和容器名/id的映射：
-
-![image-20221206175341521](images/image-20221206175341521.png)
-
-目前已经不建议使用这种方式
 
 
+### 5.4 自定义网络
 
-### 4.3 自定义网络
+因为docker0，默认情况下不能通过容器名进行访问。需要通过–link进行设置连接。这样的操作比较麻烦，更推荐的方式是自定义网络，容器都使用该自定义网络，就可以实现通过容器名来互相访问了。
 
 ```shell
 docker network ls    # 查看所有的docker网络
 ```
-
-docker中的网络模式有：
-
-* bridge：桥接（docker默认）
-* none：不配置网络
-* host：和宿主机共享网络
 
 创建一个新网络
 
@@ -1431,47 +1425,418 @@ docker中的网络模式有：
 docker  network create --driver 网络模式 --subnet 子网ip --gateway 网关 网络名     
 ```
 
-![image-20221206180138842](images/image-20221206180138842.png)
+```shell
+[root@VM-20-17-centos ~]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+09fb7082262f   bridge    bridge    local
+3571c95cd476   host      host      local
+f43080225231   none      null      local
+# --net bridge 是默认参数，不写也会自动带上的
+# docker run -d -P --name tomcat01 --net bridge tomcat 
 
-我们不仅在**docker network ls**命令下发现这个新创建的网络network，还可以使用**docker network inspect**命令查看其详细信息，包括我们创建时定义的子网ip和网关
+[root@VM-20-17-centos ~]# docker network create --help
+Usage:  docker network create [OPTIONS] NETWORK
+Create a network
+Options:
+      --attachable           Enable manual container attachment
+      --aux-address map      Auxiliary IPv4 or IPv6 addresses used by Network driver (default map[])
+      --config-from string   The network from which to copy the configuration
+      --config-only          Create a configuration only network
+  -d, --driver string        Driver to manage the Network (default "bridge")
+      --gateway strings      IPv4 or IPv6 Gateway for the master subnet
+      --ingress              Create swarm routing-mesh network
+      --internal             Restrict external access to the network
+      --ip-range strings     Allocate container ip from a sub-range
+      --ipam-driver string   IP Address Management Driver (default "default")
+      --ipam-opt map         Set IPAM driver specific options (default map[])
+      --ipv6                 Enable IPv6 networking
+      --label list           Set metadata on a network
+  -o, --opt map              Set driver specific options (default map[])
+      --scope string         Control the network's scope
+      --subnet strings       Subnet in CIDR format that represents a network segment
 
-![image-20221207110207245](images/image-20221207110207245.png)
 
-只要两个容器启动时都通过-net，选用了同一个已创建的网络，不同容器间即可通过ip地址或容器名/id连通：
+# 自定义网络
+--driver bridge   #指定bridge驱动程序来管理网络
+--subnet 192.168.0.0/16 #指定网段的CIDR格式的子网
+--gateway 192.168.0.1 	#指定主子网的IPv4或IPv6网关
 
-![image-20221207110337133](images/image-20221207110337133.png)
+[root@VM-20-17-centos ~]# docker network create --driver bridge --subnet 192.168.0.0/16 --gateway 192.168.0.1 mynet
+bd09d0023cc17bb06679eea4a70707f3d0deef462e49a883e849b38ce4bc059a
+[root@VM-20-17-centos ~]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+09fb7082262f   bridge    bridge    local
+3571c95cd476   host      host      local
+bd09d0023cc1   mynet     bridge    local
+f43080225231   none      null      local
+[root@VM-20-17-centos ~]# docker network inspect mynet
+[
+    {
+        "Name": "mynet",
+        "Id": "bd09d0023cc17bb06679eea4a70707f3d0deef462e49a883e849b38ce4bc059a",
+        "Created": "2022-04-27T09:11:51.194880776+08:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.168.0.0/16",
+                    "Gateway": "192.168.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+
+# 下面启动两个容器，指定使用该自定义网络mynet，测试处于自定义网络下的容器，是否可以直接通过容器名进行网络访问。
+[root@VM-20-17-centos ~]# docker run -d -P --name tomcat-net-01 --net mynet tomcat
+5742920d6a3cafe5d88bca0ef66d2b56d475c887984bd7948e114cc57b915720
+[root@VM-20-17-centos ~]# docker run -d -P --name tomcat-net-02 --net mynet tomcat
+d50e701c062d2d041728a0422d2c47b9ec6c80aea8b920ee32d2bb9674eca624
 
 
+[root@VM-20-17-centos ~]# docker network inspect mynet
+"Containers": {
+            "5742920d6a3cafe5d88bca0ef66d2b56d475c887984bd7948e114cc57b915720": {
+                "Name": "tomcat-net-01",
+                "EndpointID": "690a2421dcef5530238b37487ed2c879db8a8f776388bf3e0444a8914576ca57",
+                "MacAddress": "02:42:c0:a8:00:02",
+                "IPv4Address": "192.168.0.2/16",
+                "IPv6Address": ""
+            },
+            "d50e701c062d2d041728a0422d2c47b9ec6c80aea8b920ee32d2bb9674eca624": {
+                "Name": "tomcat-net-02",
+                "EndpointID": "e36caa80fefa8d1a700ed37cad51047db542e5057297435f558161921335d230",
+                "MacAddress": "02:42:c0:a8:00:03",
+                "IPv4Address": "192.168.0.3/16",
+                "IPv6Address": ""
+            }
+        },
+ # 进入01，安装ping命令       
+[root@VM-20-17-centos ~]# docker exec -it tomcat-net-01 /bin/bash
+root@5742920d6a3c:/usr/local/tomcat# apt-get update
+root@5742920d6a3c:/usr/local/tomcat# apt install iputils-ping
+# 进入02，安装ping命令
+[root@VM-20-17-centos ~]# docker exec -it tomcat-net-02 /bin/bash
+root@d50e701c062d:/usr/local/tomcat# apt-get update
+root@d50e701c062d:/usr/local/tomcat# apt install iputils-ping
 
-### 4.4 网络连通
 
-![image-20221207110406618](images/image-20221207110406618.png)
+[root@VM-20-17-centos ~]# docker exec -it tomcat-net-01 ping 192.168.0.3
+
+# 直接通过名字ping通
+[root@VM-20-17-centos ~]# docker exec -it tomcat-net-01 ping tomcat-net-02
+PING tomcat-net-02 (192.168.0.3) 56(84) bytes of data.
+64 bytes from tomcat-net-02.mynet (192.168.0.3): icmp_seq=1 ttl=64 time=0.057 ms
+64 bytes from tomcat-net-02.mynet (192.168.0.3): icmp_seq=2 ttl=64 time=0.062 ms
+^C
+--- tomcat-net-02 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 999ms
+rtt min/avg/max/mdev = 0.057/0.059/0.062/0.002 ms
 
 
-
-## 5、SpringBoot项目打包Docker镜像
-
-### 5.1 构建SpringBoot项目
-
-### 5.2 打包运行
-
-### 5.3 编写Dockerfile
-
-```dockerfile
-FROM java:8
-COPY *.jar /app.jar
-CMD ["--server.port=8080"]
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+# 反过来通过02 ping 01，一样能通
+[root@VM-20-17-centos ~]# docker exec -it tomcat-net-02 ping tomcat-net-01
+PING tomcat-net-01 (192.168.0.2) 56(84) bytes of data.
+64 bytes from tomcat-net-01.mynet (192.168.0.2): icmp_seq=1 ttl=64 time=0.058 ms
+64 bytes from tomcat-net-01.mynet (192.168.0.2): icmp_seq=2 ttl=64 time=0.057 ms
+64 bytes from tomcat-net-01.mynet (192.168.0.2): icmp_seq=3 ttl=64 time=0.063 ms
+64 bytes from tomcat-net-01.mynet (192.168.0.2): icmp_seq=4 ttl=64 time=0.063 ms
+64 bytes from tomcat-net-01.mynet (192.168.0.2): icmp_seq=5 ttl=64 time=0.078 ms
+^C
+--- tomcat-net-01 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4000ms
+rtt min/avg/max/mdev = 0.057/0.063/0.078/0.007 ms
 ```
 
-### 5.4 构建镜像
+
+
+### 5.5 Docker网络之间的互联
+
+没有设置的情况下，不同网络间的容器是无法进行网络连接的。如图，两个不同的网络docker0和自定义网络mynet的网络模型图：
+
+![image-20221211155134890](images/image-20221211155134890.png)
+
+在默认网络bridge下启动容器tomcat-01，尝试连接mynet网络下的tomcat-net-01容器
+
+![image-20221211155311194](images/image-20221211155311194.png)
+
+可以看到是无法网络连接的，不同Docker网络之间的容器需要连接的话需要把作为调用方的容器注册一个ip到被调用方所在的网络上，需要使用如下命令
 
 ```shell
-# 1.复制jar和DockerFIle到服务器
-# 2.构建镜像
-$ docker build -t xxxxx:xx  .
+[root@VM-20-17-centos ~]# docker network connect --help
+Usage:  docker network connect [OPTIONS] NETWORK CONTAINER
+Connect a container to a network
+Options:
+      --alias strings           Add network-scoped alias for the container
+      --driver-opt strings      driver options for the network
+      --ip string               IPv4 address (e.g., 172.30.100.104)
+      --ip6 string              IPv6 address (e.g., 2001:db8::33)
+      --link list               Add link to another container
+      --link-local-ip strings   Add a link-local address for the container
+
+# 打通tomcat01 和mynet这个网络
+[root@VM-20-17-centos ~]# docker network connect mynet tomcat01
+[root@VM-20-17-centos ~]# docker network inspect mynet
+
+# tomcat01这个容器现在就有了两个ip地址 
 ```
 
-### 5.5 发布运行
+![image-20221211155458402](images/image-20221211155458402.png)
 
+```shell
+# 可以发现，现在tomcat01已经能打通tomcat-net-01
+[root@VM-20-17-centos ~]# docker exec -it tomcat01 ping tomcat-net-01
+PING tomcat-net-01 (192.168.0.2) 56(84) bytes of data.
+64 bytes from tomcat-net-01.mynet (192.168.0.2): icmp_seq=1 ttl=64 time=0.064 ms
+64 bytes from tomcat-net-01.mynet (192.168.0.2): icmp_seq=2 ttl=64 time=0.060 ms
+^C
+--- tomcat-net-01 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1000ms
+rtt min/avg/max/mdev = 0.060/0.062/0.064/0.002 ms
+# tomcat02没有跟mynet这个网络打通，所以依旧无法ping通
+[root@VM-20-17-centos ~]# docker exec -it tomcat02 ping tomcat-net-01
+ping: tomcat-net-01: Name or service not known
+```
+
+
+
+### 5.6 Docker网络实战练习
+
+#### 5.6.1 Redis集群部署
+
+下面部署如图所示的三主三从的Redis集群
+
+<img src="images/image-20221211155743576.png" alt="image-20221211155743576" style="zoom: 80%;" />
+
+```shell
+# 创建网络名为redis的自定义网络
+[root@VM-20-17-centos ~]# docker network create redis --subnet 172.38.0.0/16
+941d8f6648642f8f7f210a06d6c0001f1b704e8404a4826849b152d64896fca3
+[root@VM-20-17-centos ~]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+09fb7082262f   bridge    bridge    local
+3571c95cd476   host      host      local
+bd09d0023cc1   mynet     bridge    local
+f43080225231   none      null      local
+941d8f664864   redis     bridge    local
+```
+
+通过以下脚本创建六个redis的配置信息
+
+```shell
+for port in $(seq 1 6); \
+do \
+mkdir -p /mydata/redis/node-${port}/conf
+touch /mydata/redis/node-${port}/conf/redis.conf
+# cat << EOF 随意输入一堆字符，当输入EOF的时候才真正结束
+cat << EOF >/mydata/redis/node-${port}/conf/redis.conf
+port 6379 
+bind 0.0.0.0
+cluster-enabled yes 
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+cluster-announce-ip 172.38.0.1${port}
+cluster-announce-port 6379
+cluster-announce-bus-port 16379
+appendonly yes
+EOF
+done
+```
+
+```shell
+[root@VM-20-17-centos ~]# cd /mydata/
+[root@VM-20-17-centos mydata]# ls
+redis
+[root@VM-20-17-centos mydata]# cd redis/
+[root@VM-20-17-centos redis]# ls
+node-1  node-2  node-3  node-4  node-5  node-6
+```
+
+依次启动六个redis，设置对应的容器数据卷挂载
+
+```shell
+#第1个Redis容器
+docker run -p 6371:6379 -p 16371:16379 --name redis-1 \
+    -v /mydata/redis/node-1/data:/data \
+    -v /mydata/redis/node-1/conf/redis.conf:/etc/redis/redis.conf \
+    -d --net redis --ip 172.38.0.11 redis:5.0.9-alpine3.11 redis-server /etc/redis/redis.conf
+#第2个Redis容器
+docker run -p 6372:6379 -p 16372:16379 --name redis-2 \
+    -v /mydata/redis/node-2/data:/data \
+    -v /mydata/redis/node-2/conf/redis.conf:/etc/redis/redis.conf \
+    -d --net redis --ip 172.38.0.12 redis:5.0.9-alpine3.11 redis-server /etc/redis/redis.conf
+#第3个Redis容器
+docker run -p 6373:6379 -p 16373:16379 --name redis-3 \
+    -v /mydata/redis/node-3/data:/data \
+    -v /mydata/redis/node-3/conf/redis.conf:/etc/redis/redis.conf \
+    -d --net redis --ip 172.38.0.13 redis:5.0.9-alpine3.11 redis-server /etc/redis/redis.conf
+#第4个Redis容器
+docker run -p 6374:6379 -p 16374:16379 --name redis-4 \
+    -v /mydata/redis/node-4/data:/data \
+    -v /mydata/redis/node-4/conf/redis.conf:/etc/redis/redis.conf \
+    -d --net redis --ip 172.38.0.14 redis:5.0.9-alpine3.11 redis-server /etc/redis/redis.conf
+#第5个Redis容器
+docker run -p 6375:6379 -p 16375:16379 --name redis-5 \
+    -v /mydata/redis/node-5/data:/data \
+    -v /mydata/redis/node-5/conf/redis.conf:/etc/redis/redis.conf \
+    -d --net redis --ip 172.38.0.15 redis:5.0.9-alpine3.11 redis-server /etc/redis/redis.conf
+#第6个Redis容器
+docker run -p 6376:6379 -p 16376:16379 --name redis-6 \
+    -v /mydata/redis/node-6/data:/data \
+    -v /mydata/redis/node-6/conf/redis.conf:/etc/redis/redis.conf \
+    -d --net redis --ip 172.38.0.16 redis:5.0.9-alpine3.11 redis-server /etc/redis/redis.conf
+
+# 日志查看  docker logs redis-1   docker logs redis-2
+```
+
+进入容器
+
+```shell
+#  这个redis镜像中没有bash，是sh ，这里进入的是redis-1这个容器
+[root@VM-20-17-centos redis]# docker exec -it redis-1 /bin/sh
+# 创建集群
+/data # redis-cli --cluster create 172.38.0.11:6379 172.38.0.12:6379 172.38.0.13:6379 172.38.0.14:6379 172.38.0.15:6379 172.38.0.16:6379 --cluster-replicas 1
+
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+```
+
+查看集群信息
+
+```shell
+# redis-cli -c
+# cluster info
+# cluster nodes
+/data # redis-cli -c
+127.0.0.1:6379> cluster info
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:203
+cluster_stats_messages_pong_sent:206
+cluster_stats_messages_sent:409
+cluster_stats_messages_ping_received:201
+cluster_stats_messages_pong_received:203
+cluster_stats_messages_meet_received:5
+cluster_stats_messages_received:409
+127.0.0.1:6379> cluster nodes
+1fe798431adf6929e7c4c42dfe68a06cf2afc8fc 172.38.0.12:6379@16379 master - 0 1651026759598 2 connected 5461-10922   # 主机
+8772dc6ea9377834bd6478dc705abe6fa3a655f1 172.38.0.14:6379@16379 slave # 从机 24b2f2cf14ad8edc16b336ec539ca38c615f030a 0 1651026759000 4 connected  
+002d5169ffa41b51d434a53a62388e039fabb3ad 172.38.0.16:6379@16379 slave # 从机 1fe798431adf6929e7c4c42dfe68a06cf2afc8fc 0 1651026758095 6 connected  
+5859376a31233072e1761c82a43a55d4a4508740 172.38.0.11:6379@16379 myself,master - 0 1651026758000 1 connected 0-5460  # 主机
+5edeb5a195a1ae0f0e9b54018312e4f129c5bdab 172.38.0.15:6379@16379 slave   # 从机 5859376a31233072e1761c82a43a55d4a4508740 0 1651026760099 5 connected
+24b2f2cf14ad8edc16b336ec539ca38c615f030a 172.38.0.13:6379@16379 master - 0 1651026759097 3 connected 10923-16383   # 主机
+
+
+/data # redis-cli -c
+127.0.0.1:6379> set test02 ceshi
+-> Redirected to slot [14163] located at 172.38.0.13:6379
+OK
+
+[root@VM-20-17-centos ~]# docker stop redis-3
+redis-3
+#要重进集群，因为当前连的是172.38.0.13的，而正好在刚刚被我们停掉了，所以要重新进入集群，然后再次查看
+/data # redis-cli -c
+127.0.0.1:6379> get test02
+-> Redirected to slot [14163] located at 172.38.0.14:6379
+"ceshi"
+```
+
+![image-20221211160356306](images/image-20221211160356306.png)
+
+
+
+#### 5.6.2 SpringBoot项目打包Docker镜像
+
+1. 构建springboot项目
+
+   ```java
+   package dockerdemo.demo;
+   import org.springframework.boot.SpringApplication;
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+   @SpringBootApplication
+   public class DemoApplication {
+       public static void main(String[] args) {
+           SpringApplication.run(DemoApplication.class, args);
+       }
+   }
+   ```
+
+2. 应用打包
+
+   <img src="images/image-20221211160544679.png" alt="image-20221211160544679" style="zoom: 50%;" />
+
+3. 编写Dockerfile
+
+   ```dockerfile
+   FROM java:8
+   COPY *.jar /app.jar
+   CMD ["--server.port=8080"]
+   EXPOSE 8080
+   ENTRYPOINT ["java","-jar","/app.jar"]
+   ```
+
+   把jar包从target里面复制出来，因为Dockerfile里面写的是当前目录下的所有jar包，而Dockerfile的当前目录是处于根目录
+
+   <img src="images/image-20221211160730198.png" alt="image-20221211160730198" style="zoom:67%;" />
+
+   把jar包和Dockerfile放到服务器某个目录下
+
+   <img src="images/image-20221211160815501.png" alt="image-20221211160815501" style="zoom:67%;" />
+
+4. 构建镜像
+
+   ```shell
+   [root@VM-20-17-centos springbootdocker]# docker build -t kaydockerdemo .
+   [root@VM-20-17-centos springbootdocker]# docker images
+   REPOSITORY      TAG                IMAGE ID       CREATED              SIZE
+   kaydockerdemo   latest             946edb0ba69b   About a minute ago   661MB
+   tomcat          latest             0183eb12bb0c   29 hours ago         680MB
+   redis           5.0.9-alpine3.11   3661c84ee9d0   2 years ago          29.8MB
+   java            8                  d23bdf5b1b1b   5 years ago          643MB
+   ```
+
+5. 发布运行
+
+   ```shell
+   # 运行容器
+   [root@VM-20-17-centos springbootdocker]# docker run -d -P --name kay-springboot-web kaydockerdemo
+   46fb7e19f24c984b137a6b69dc3e9ef0741aad711fd82faf1107f3c74a4d2f3a
+   [root@VM-20-17-centos springbootdocker]# docker ps
+   CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+   46fb7e19f24c   kaydockerdemo   "java -jar /app.jar …"   43 seconds ago   Up 42 seconds   0.0.0.0:49161->8080/tcp, :::49161->8080/tcp   kay-springboot-web
+   [root@VM-20-17-centos springbootdocker]# curl localhost:49161
+   hello
+   ```
+
+   **注意**
+
+   如果在运行docker期间有进行防火墙操作，那么一定要重启docker
+
+   ```shell
+   systemctl restart docker
+   ```
+
+   
